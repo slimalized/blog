@@ -1,14 +1,29 @@
 {
-  "name": "blog",
-  "type": "module",
-  "version": "0.0.1",
-  "scripts": {
-    "dev": "astro dev",
-    "build": "astro build",
-    "preview": "astro preview",
-    "astro": "astro"
-  },
-  "dependencies": {
-    "astro": "^5.7.13"
-  }
+	"name": "blog",
+	"type": "module",
+	"version": "0.0.1",
+	"scripts": {
+		"dev": "astro dev",
+		"build": "astro build",
+		"preview": "astro preview",
+		"astro": "astro",
+		"biome": "biome check --write .",
+		"biome:format": "biome format --write .",
+		"biome:lint": "biome lint --write .",
+		"prettier": "prettier --ignore-path .gitignore --write 'src/**/*.{md,astro}'",
+		"stylelint": "stylelint --ignore-path .gitignore 'src/**/*.{css,astro}'"
+	},
+	"dependencies": {
+		"astro": "^5.7.13"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "1.9.4",
+		"lefthook": "^1.11.13",
+		"prettier": "3.5.3",
+		"prettier-plugin-astro": "0.14.1",
+		"stylelint": "^16.19.1",
+		"stylelint-config-html": "^1.1.0",
+		"stylelint-config-recess-order": "^6.0.0",
+		"stylelint-config-standard": "^38.0.0"
+	}
 }

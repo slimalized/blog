@@ -1,0 +1,56 @@
+{
+	"editor.defaultFormatter": "biomejs.biome",
+	"editor.codeActionsOnSave": {
+		"quickfix.biome": "explicit"
+	},
+
+	"[javascript]": {
+		"editor.defaultFormatter": "biomejs.biome"
+	},
+	"[typescript]": {
+		"editor.defaultFormatter": "biomejs.biome"
+	},
+	"[typescriptreact]": {
+		"editor.defaultFormatter": "biomejs.biome"
+	},
+
+	"[json]": {
+		"editor.defaultFormatter": "biomejs.biome"
+	},
+
+	"css.validate": false,
+	"[css]": {
+		"editor.codeActionsOnSave": {
+			"source.fixAll.stylelint": "explicit"
+		}
+	},
+	"stylelint.validate": ["css", "html", "astro"],
+
+	"prettier.documentSelectors": ["**/*.astro"],
+	"[astro]": {
+		"editor.defaultFormatter": "esbenp.prettier-vscode",
+		"editor.codeActionsOnSave": {
+			"source.fixAll.stylelint": "explicit"
+		}
+	},
+	"emmet.includeLanguages": {
+		"astro": "html"
+	},
+
+	"[markdown]": {
+		"editor.defaultFormatter": "DavidAnson.vscode-markdownlint"
+	},
+	"markdownlint.config": {
+		"default": true,
+		"MD018": false,
+		"MD041": false
+	},
+
+	"explorer.fileNesting.enabled": true,
+	"explorer.fileNesting.expand": false,
+	"explorer.fileNesting.patterns": {
+		"*.tsx": "$(capture).module.css"
+	},
+
+	"cSpell.words": ["lefthook"]
+}

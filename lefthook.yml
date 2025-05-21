@@ -1,0 +1,30 @@
+# EXAMPLE USAGE:
+#
+#   Refer for explanation to following link:
+#   https://lefthook.dev/configuration/
+#
+
+pre-commit:
+  parallel: true
+  jobs:
+    - name: Biome
+      glob: "*.{js,jsx,ts,tsx,json,md,yml}"
+      run: bun run biome {staged_files}
+      stage_fixed: true
+      skip:
+        - merge
+        - rebase
+    - name: StyleLint
+      glob: "*.{css,astro}"
+      run: bun run stylelint {staged_files}
+      stage_fixed: true
+      skip:
+        - merge
+        - rebase
+    - name: Prettier
+      glob: "*.astro"
+      run: bun run prettier {staged_files}
+      stage_fixed: true
+      skip:
+        - merge
+        - rebase
