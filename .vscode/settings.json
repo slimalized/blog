@@ -28,7 +28,7 @@
 
 	"prettier.documentSelectors": ["**/*.astro"],
 	"[astro]": {
-		"editor.defaultFormatter": "esbenp.prettier-vscode",
+		"editor.defaultFormatter": "astro-build.astro-vscode",
 		"editor.codeActionsOnSave": {
 			"source.fixAll.stylelint": "explicit"
 		}
@@ -52,5 +52,5 @@
 		"*.tsx": "$(capture).module.css"
 	},
 
-	"cSpell.words": ["lefthook"]
+	"cSpell.words": ["lefthook", "slimalized"]
 }
