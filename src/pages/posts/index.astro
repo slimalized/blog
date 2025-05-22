@@ -1,0 +1,30 @@
+---
+import { getCollection } from "astro:content";
+import { formatDate } from "../../shared/formatDate";
+import Layout from "../_pages.astro";
+
+const posts = await getCollection("posts");
+
+const sortedPosts = posts.sort((a, b) => {
+    const aDate = new Date(a.data.publishedDate);
+    const bDate = new Date(b.data.publishedDate);
+    return bDate.getTime() - aDate.getTime();
+});
+---
+
+<Layout title="posts">
+    <ul>
+        {
+            sortedPosts.map((post) => (
+                <li>
+                    <a href={`/posts/${post.id}`}>
+                        <p>
+                            {post.data.title}
+                            <span>({formatDate(post.data.publishedDate)})</span>
+                        </p>
+                    </a>
+                </li>
+            ))
+        }
+    </ul>
+</Layout>
