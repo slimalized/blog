@@ -7,9 +7,9 @@
 		"build": "astro build",
 		"preview": "astro preview",
 		"astro": "astro",
-		"biome": "biome check --write .",
-		"biome:format": "biome format --write .",
-		"biome:lint": "biome lint --write .",
+		"biome": "biome check --write",
+		"biome:format": "biome format --write",
+		"biome:lint": "biome lint --write",
 		"prettier": "prettier --ignore-path .gitignore --write 'src/**/*.{md,astro}'",
 		"stylelint": "stylelint --ignore-path .gitignore 'src/**/*.{css,astro}'"
 	},
