@@ -1,0 +1,82 @@
+---
+import appleTouchIconPng from "../assets/apple-touch-icon.png";
+import faviconIco from "../assets/favicon.ico";
+import faviconSvg from "../assets/favicon.svg";
+import { site } from "../shared/consts";
+
+interface Props {
+    title: string;
+    type?: "article" | "404" | undefined;
+    isNoIndex?: true | undefined;
+    description?: string | undefined;
+    ogImageSrc?: string | undefined;
+}
+
+const {
+    title,
+    type,
+    isNoIndex,
+    description,
+    ogImageSrc = appleTouchIconPng.src /**@todo generate OGP images automatically */,
+}: Props = Astro.props;
+
+const isArticle = type === "article";
+const is404 = type === "404";
+---
+
+<!doctype html>
+<html lang={site.lang}>
+    <head prefix="og: https://ogp.me/ns#">
+        <meta charset="utf-8" />
+        <meta name="color-scheme" content="light dark" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+        <title>{title}</title>
+
+        {
+            (isNoIndex || is404) && (
+                <meta name="robots" content="noindex nofollow" />
+            )
+        }
+        {description && <meta name="description" content={description} />}
+        <meta name="generator" content={Astro.generator} />
+
+        <meta property="og:title" content={title} />
+        <meta property="og:image" content={new URL(ogImageSrc, Astro.url)} />
+        <meta property="og:locale" content={`${site.lang}_${site.region}`} />
+        <meta property="og:site_name" content={site.domain} />
+        {
+            !is404 && (
+                <meta
+                    property="og:type"
+                    content={isArticle ? "article" : "website"}
+                />
+            )
+        }
+        {!is404 && <meta property="og:url" content={Astro.url} />}
+        {
+            description && (
+                <meta property="og:description" content={description} />
+            )
+        }
+
+        <meta name="twitter:card" content="summary" />
+        <meta name="twitter:site" content={`@${site.twitterId}`} />
+
+        {isArticle && <meta property="article:author" content={site.author} />}
+        <!-- @todo: add article:section, published_time, modified_time -->
+
+        <link rel="icon" href={faviconIco} sizes="48x48" />
+        <link
+            rel="icon"
+            href={faviconSvg.src}
+            sizes="any"
+            type="image/svg+xml"
+        />
+        <link rel="apple-touch-icon" href={appleTouchIconPng.src} />
+        {!is404 && <link rel="canonical" href={Astro.url} />}
+    </head>
+    <body>
+        <slot />
+    </body>
+</html>
