@@ -1,0 +1,68 @@
+---
+import type { HeadingProps } from "../utils/remark/headingAnchor";
+
+// normal heading: Astro.props = {id: string; value: string; depth: string;}
+// footnote heading: Astro.props = {id: "footnote-label"; class: "sr-only"}
+const {
+    id: _id,
+    value = "脚注",
+    depth = "3",
+    class: _class,
+} = Astro.props as HeadingProps;
+
+const isFootnoteHeading = _class === "sr-only";
+const id = isFootnoteHeading ? "footnotes" : _id;
+const H = `h${depth}`;
+const pageUrl = Astro.url.href.replace(/(?<!^)\/$/, ""); // Remove trailing slash from the URL
+---
+
+{isFootnoteHeading && <hr />}
+<H {...{ id }}>
+    <a href={`${pageUrl}#${id}`}>#</a>
+    <span>{value}</span>
+</H>
+
+<style>
+    :is(h2, h3, h4) {
+        display: flex;
+        column-gap: 0.5rem;
+        font-family: var(--font-sans-variant);
+        font-weight: var(--font-weight-medium);
+        line-height: var(--line-height-jp-s);
+        word-break: auto-phrase;
+        text-wrap: pretty;
+    }
+
+    h2 {
+        padding-block-end: var(--space-s);
+        margin-block-start: var(--space-xxl);
+        font-size: var(--font-size-xxl);
+        scroll-margin: var(--space-xxl);
+        border-bottom: solid 2px var(--color-primary-outline-l);
+    }
+
+    h3 {
+        margin-block-start: var(--space-xl);
+        font-size: var(--font-size-xl);
+        scroll-margin: var(--space-xl);
+    }
+
+    h4 {
+        margin-block-start: var(--space-l);
+        font-size: var(--font-size-l);
+        scroll-margin: var(--space-l);
+    }
+
+    a:is(:where(h2, h3, h4) > *) {
+        color: var(--color-primary-text-l);
+        text-decoration: none;
+        user-select: none;
+    }
+
+    @media (hover: hover) {
+        a:is(:where(h2, h3, h4) > *):hover {
+            color: var(--color-primary-text-h);
+            text-decoration: revert;
+        }
+    }
+</style>
