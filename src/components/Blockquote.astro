@@ -1,0 +1,183 @@
+---
+import { SquareArrowOutUpRight } from "lucide-react";
+import { formatDate } from "../utils/formatDate";
+import type { BlockquoteProps } from "../utils/remark/twitterQuote";
+
+const {
+    tweetUrlString,
+    authorName,
+    authorUrlString,
+    html,
+    postedDateString,
+    referencedDateString,
+    type,
+} = Astro.props as BlockquoteProps;
+
+const isTwitterQuote = type === "twitterQuote";
+
+const meta: {
+    tweetUrl?: URL;
+    authorUrl?: URL;
+    authorId?: string;
+    postedDate?: string;
+    referencedDate?: string;
+} = {};
+
+if (isTwitterQuote) {
+    meta.tweetUrl = new URL(tweetUrlString);
+    meta.authorUrl = new URL(authorUrlString);
+    meta.authorId = meta.authorUrl?.pathname.slice(1);
+    meta.postedDate = formatDate(new Date(postedDateString));
+    meta.referencedDate = formatDate(new Date(referencedDateString));
+}
+---
+
+{
+    // normal quote
+    !isTwitterQuote && (
+        <blockquote>
+            <slot />
+        </blockquote>
+    )
+}
+
+{
+    // twitter quote
+    isTwitterQuote && (
+        <blockquote class="twitter-quote">
+            <p>
+                <span>{authorName}</span>
+                <span>(&#64;{meta.authorId})</span>
+                <span>{meta.postedDate}</span>
+            </p>
+            <Fragment class="main" set:html={html} />
+            <p>
+                <span>参照日：{meta.referencedDate}</span>
+                <a
+                    href={meta.tweetUrl}
+                    target="_blank"
+                    rel="noopener noreferrer nofollow"
+                >
+                    Xで開く
+                    <SquareArrowOutUpRight />
+                </a>
+            </p>
+        </blockquote>
+    )
+}
+
+<style>
+    blockquote {
+        padding-block: 0.5rem;
+        padding-inline: calc(1rem - 4px) 1rem;
+        margin-block-start: var(--space-m);
+        border-inline-start: solid 4px var(--color-primary-outline-m);
+    }
+
+    /* stylelint-disable-next-line selector-pseudo-class-no-unknown */
+    :global(blockquote > *:first-child) {
+        margin-block-start: 0;
+    }
+
+    blockquote.twitter-quote {
+        padding-block: var(--space-s);
+        padding-inline: 1rem;
+        margin-block-start: var(--space-l);
+        overflow: hidden;
+        background-color: var(--color-primary-background-layer-l);
+        border: solid 1px var(--color-primary-outline-l);
+        border-radius: var(--border-radius-s);
+        box-shadow: var(--box-shadow-s);
+
+        &::before {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            content: "";
+            background-color: var(--color-twitter-blue);
+        }
+    }
+
+    span:is(blockquote.twitter-quote + *) {
+        display: inline-block;
+        width: 100%;
+        padding-inline-end: 1rem;
+        margin-block-start: var(--space-xs);
+        margin-inline-start: auto;
+        font-size: var(--font-size-xs);
+        color: var(--color-primary-text-l);
+        text-align: right;
+    }
+
+    span:is(blockquote.twitter-quote > *):first-of-type {
+        font-size: var(--font-size-s);
+        color: var(--color-primary-text-l);
+    }
+
+    /* stylelint-disable-next-line selector-pseudo-class-no-unknown */
+    blockquote.twitter-quote :global(p[dir="ltr"]) {
+        margin-block-start: var(--space-xs);
+        line-height: var(--line-height-jp-m);
+    }
+
+    p:is(blockquote.twitter-quote > *):first-of-type {
+        display: flex;
+        column-gap: 4px;
+        align-items: end;
+        width: 100%;
+
+        span {
+            padding-block: 4px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            font-size: var(--font-size-s);
+            line-height: var(--line-height-none);
+            white-space: nowrap;
+        }
+
+        span:not(:first-of-type) {
+            min-width: max-content;
+            color: var(--color-primary-text-l);
+        }
+    }
+
+    p:is(blockquote.twitter-quote > *):last-of-type {
+        display: flex;
+        column-gap: 4px;
+        align-items: end;
+        width: 100%;
+        padding-block-start: 0.5rem;
+        margin-block-start: var(--space-s);
+        font-size: var(--font-size-xs);
+        color: var(--color-primary-text-l);
+        border-block-start: dashed 1px var(--color-primary-outline-l);
+
+        a {
+            display: flex;
+            align-items: center;
+            min-width: max-content;
+            padding-block: 4px;
+            margin-inline-start: auto;
+            font-size: var(--font-size-xs);
+            line-height: var(--line-height-none);
+            text-decoration: none;
+            border-block-end: solid 1px currentcolor;
+
+            svg {
+                margin-block-start: 1px;
+            }
+        }
+    }
+
+    :is(img, svg) {
+        --size: var(--font-size-xs);
+
+        width: var(--size);
+        min-width: var(--size);
+        height: var(--size);
+        min-height: var(--size);
+        transition: translate ease-out 300ms;
+    }
+</style>
