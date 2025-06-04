@@ -1,0 +1,100 @@
+---
+import { Code } from "astro:components";
+import { nanoid } from "nanoid";
+import type {
+    BuiltinLanguage,
+    LanguageRegistration,
+    SpecialLanguage,
+} from "shiki";
+import type { CodeBlockProps } from "../utils/remark/codeBlock";
+import { CopyCodeButton } from "./CopyCodeButton";
+
+/**
+ * Adjust notation variations.
+ * @see https://shiki.style/languages */
+const langID: { [key: string]: string } = {
+    md: "markdown",
+    js: "javascript",
+    ts: "typescript",
+    bash: "shellscript",
+    sh: "shellscript",
+    shell: "shellscript",
+    zsh: "shellscript",
+};
+
+const { lang, title: _title, code: _code } = Astro.props as CodeBlockProps;
+const code = decodeURIComponent(_code);
+const id = `id-${nanoid()}`;
+const title = _title ?? langID[lang] ?? lang;
+---
+
+<figure>
+    <figcaption>
+        <span data-title={title}>{title}</span>
+        <CopyCodeButton code={code} codeBlockId={id} client:load />
+    </figcaption>
+    <div>
+        <div id={id} aria-hidden="true"></div>
+        <Code
+            tabindex="-1"
+            lang={lang as
+                | BuiltinLanguage
+                | SpecialLanguage
+                | LanguageRegistration
+                | undefined}
+            code={code}
+            themes={{ light: "github-light", dark: "github-dark" }}
+        />
+    </div>
+</figure>
+
+<style>
+    details:has(figure) {
+        margin-block-start: var(--space-m);
+    }
+
+    figure {
+        display: flex;
+        flex-direction: column;
+        row-gap: 1rem;
+        margin-block-start: var(--space-m);
+    }
+
+    figcaption {
+        display: flex;
+        place-items: center;
+        justify-content: space-between;
+        padding-block: 4px;
+        padding-inline: 1rem;
+        font-family: var(--font-mono);
+        color: var(--color-secondary-text-l);
+        border-bottom: solid 1px var(--color-secondary-outline-l);
+    }
+
+    span:is(figcaption > *) {
+        font-size: var(--font-size-s);
+
+        &::before {
+            position: absolute;
+            bottom: calc(-4px - 1px);
+            left: -2px;
+            width: calc(100% + 4px);
+            height: 1px;
+            content: "";
+            background-color: var(--color-secondary-text-l);
+        }
+    }
+
+    pre:is(div > *) {
+        padding-block: 0.8rem;
+        padding-inline: 1rem 0.5rem;
+        scrollbar-color: var(--color-secondary-outline-l) transparent;
+        scrollbar-width: thin;
+    }
+
+    div:has(pre) {
+        overflow: hidden;
+        background-color: var(--color-background-code);
+        border-radius: var(--border-radius-s);
+    }
+</style>

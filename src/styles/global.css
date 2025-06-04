@@ -1,0 +1,131 @@
+@charset "UTF-8";
+
+@import url("./variables.css");
+@import url("./reset.css") layer(reset);
+@import url("./writing.css") layer(writing);
+
+@font-face {
+	font-family: "Noto Sans JP";
+	font-style: normal;
+	font-weight: 400;
+	src: local("Noto Sans JP"), url("/fonts/noto-sans-jp_regular_400.woff2")
+		format("woff2");
+	font-display: swap;
+}
+
+@font-face {
+	font-family: "Noto Sans JP";
+	font-style: normal;
+	font-weight: 700;
+	src: local("Noto Sans JP"), url("/fonts/noto-sans-jp_bold_700.woff2")
+		format("woff2");
+	font-display: swap;
+}
+
+@font-face {
+	font-family: "Zen Kaku Gothic New";
+	font-style: normal;
+	font-weight: 500;
+	src: local("Zen Kaku Gothic New"),
+		url("/fonts/zen-kaku-gothic-new_medium_500.woff2") format("woff2");
+	font-display: swap;
+}
+
+@font-face {
+	font-family: "JetBrains Mono";
+	font-style: normal;
+	font-weight: 400;
+	src: local("JetBrains Mono"), url("/fonts/jetbrains-mono_regular_400.woff2")
+		format("woff2");
+	font-display: swap;
+}
+
+@layer reset, base, writing;
+
+@layer base {
+	* {
+		position: relative;
+	}
+
+	*::selection {
+		color: var(--color-text-selection);
+		background-color: var(--color-background-selection);
+	}
+
+	html,
+	body {
+		scrollbar-gutter: stable;
+		font-size: var(--font-size-m);
+		font-weight: var(--font-weight-regular);
+		line-height: var(--line-height-jp-m);
+		color: var(--color-primary-text-h);
+		word-break: normal;
+		overflow-wrap: anywhere;
+		text-underline-offset: 0.25em;
+		background-color: var(--color-background);
+		text-size-adjust: 100%;
+		line-break: strict;
+		text-spacing-trim: trim-start;
+	}
+
+	body {
+		width: var(--width-base);
+		margin-inline: auto;
+		font-family: var(--font-sans);
+		font-style: normal;
+		font-weight: 400;
+	}
+
+	pre {
+		text-spacing-trim: space-all;
+	}
+
+	pre,
+	time,
+	input,
+	textarea {
+		text-autospace: no-autospace;
+	}
+
+	a,
+	button {
+		-webkit-tap-highlight-color: transparent;
+	}
+
+	a:any-link {
+		color: var(--color-link-base);
+		text-decoration: underline solid;
+		text-decoration-thickness: 1px;
+		text-decoration-color: currentcolor;
+	}
+
+	@media (hover: hover) {
+		a:hover {
+			color: var(--color-link-on);
+			text-decoration-thickness: 2px;
+		}
+	}
+
+	a:active {
+		color: var(--color-link-down);
+	}
+
+	strong {
+		font-weight: var(--font-weight-bold);
+	}
+
+	/* See: https://docs.astro.build/en/guides/syntax-highlighting/#setting-light-and-dark-mode-themes */
+	.astro-code,
+	.astro-code span {
+		background-color: transparent !important;
+	}
+}
+
+@media (prefers-color-scheme: dark) {
+	@layer base {
+		.astro-code,
+		.astro-code span {
+			color: var(--shiki-dark) !important;
+		}
+	}
+}

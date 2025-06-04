@@ -21,7 +21,8 @@
 	"css.validate": false,
 	"[css]": {
 		"editor.codeActionsOnSave": {
-			"source.fixAll.stylelint": "explicit"
+			"source.fixAll.stylelint": "explicit",
+			"quickfix.biome": "explicit"
 		}
 	},
 	"stylelint.validate": ["css", "html", "astro"],
@@ -52,5 +53,19 @@
 		"*.tsx": "$(capture).module.css"
 	},
 
-	"cSpell.words": ["lefthook", "slimalized"]
+	"cSpell.words": [
+		"autospace",
+		"currentcolor",
+		"FFFFFC",
+		"Kaku",
+		"lefthook",
+		"lucide",
+		"mdast",
+		"noopener",
+		"noto",
+		"palt",
+		"shiki",
+		"slimalized",
+		"wght"
+	]
 }
