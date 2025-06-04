@@ -1,0 +1,85 @@
+button.copy-button {
+	display: flex;
+	place-items: center;
+	height: max-content;
+	padding: 0;
+	padding-block: 4px;
+	font-family: var(--font-mono);
+	font-size: var(--font-size-s);
+	line-height: var(--line-height-none);
+	color: var(--color-secondary-text-l);
+	cursor: pointer;
+	background-color: transparent;
+	border: none;
+	transition: opacity 200ms, scale 100ms;
+}
+
+span:is(button.copy-button > *) {
+	height: 100%;
+	user-select: none;
+	transition: translate 200ms, color 200ms;
+}
+
+span:is(button.copy-button > *):first-of-type[data-is-copied="true"] {
+	color: var(--color-secondary-text-h);
+	translate: -2ch;
+}
+
+span:is(button.copy-button > *):nth-of-type(2)::before {
+	position: absolute;
+	right: 0;
+	width: max-content;
+	color: transparent;
+	content: "ied";
+	transition: inherit;
+}
+
+span:is(button.copy-button > *):nth-of-type(2)[data-is-copied="true"] {
+	color: transparent;
+
+	&::before {
+		color: var(--color-secondary-text-h);
+	}
+}
+
+span:is(button.copy-button > *):last-of-type {
+	padding-inline-start: 4px;
+}
+
+div.ripple {
+	position: absolute;
+	top: -2rem;
+	left: calc(100% - 4rem);
+	width: 0;
+	height: 0;
+	background: radial-gradient(
+		circle,
+		transparent 0%,
+		rgb(from var(--color-background) r g b / 20%) 20%,
+		rgb(from var(--color-secondary-container-h) r g b / 40%) 30%,
+		rgb(from var(--color-background) r g b / 20%) 40%,
+		rgb(from var(--color-secondary-container-m) r g b / 40%) 50%,
+		rgb(from var(--color-background) r g b / 20%) 60%,
+		transparent 70%
+	);
+	border-radius: 50%;
+	transform: translate(-50%, -50%);
+	animation: ripple-wave 2000ms ease-out forwards;
+}
+
+@keyframes ripple-wave {
+	0% {
+		width: 0;
+		height: 0;
+	}
+
+	50% {
+		opacity: 0.6;
+	}
+
+	100% {
+		width: calc(var(--width-base) * 6);
+		height: calc(var(--width-base) * 6);
+		opacity: 0;
+	}
+}
