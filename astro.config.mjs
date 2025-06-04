@@ -6,13 +6,15 @@ import { headingAnchor } from "./src/utils/remark/headingAnchor";
 import { linkCard } from "./src/utils/remark/linkCard";
 import { twitterQuote } from "./src/utils/remark/twitterQuote";
 import { codeBlock } from "./src/utils/remark/codeBlock";
+import { details } from "./src/utils/remark/details";
 
 // https://astro.build/config
 export default defineConfig({
 	site: "https://slimalized.dev",
 	integrations: [mdx(), react()],
 	markdown: {
-		remarkPlugins: [headingAnchor, linkCard, twitterQuote, codeBlock],
+		// "details" changes the structure of the tree, so call it first.
+		remarkPlugins: [details, headingAnchor, linkCard, twitterQuote, codeBlock],
 		shikiConfig: {
 			themes: {
 				light: "github-light",
