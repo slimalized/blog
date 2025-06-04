@@ -1,6 +1,11 @@
 ---
 import { getCollection, render } from "astro:content";
-import { formatDate } from "../../shared/formatDate";
+import Blockquote from "../../components/Blockquote.astro";
+import CodeBlock from "../../components/CodeBlock.astro";
+import Details from "../../components/Details.astro";
+import Heading from "../../components/Heading.astro";
+import Link from "../../components/Link.astro";
+import { formatDate } from "../../utils/formatDate";
 import Layout from "../_pages.astro";
 
 export async function getStaticPaths() {
@@ -14,10 +19,20 @@ export async function getStaticPaths() {
 const { post } = Astro.props;
 const { Content } = await render(post);
 const date = formatDate(post.data.publishedDate);
+
+const components = {
+    h2: Heading,
+    h3: Heading,
+    h4: Heading,
+    pre: CodeBlock,
+    a: Link,
+    blockquote: Blockquote,
+    details: Details,
+};
 ---
 
 <Layout title={post.data.title} type="article">
     <h1>{post.data.title}</h1>
     <p>{date}</p>
-    <Content />
+    <Content components={components} />
 </Layout>

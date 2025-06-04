@@ -14,7 +14,8 @@
 		"stylelint": "stylelint --ignore-path .gitignore 'src/**/*.{css,astro}'"
 	},
 	"dependencies": {
-		"astro": "5.7.14"
+		"@astrojs/mdx": "^4.3.0",
+		"astro": "5.8.1"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "1.9.4",
