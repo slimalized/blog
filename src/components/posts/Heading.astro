@@ -31,26 +31,24 @@ const pageUrl = Astro.url.href.replace(/(?<!^)\/$/, ""); // Remove trailing slas
         line-height: var(--line-height-jp-s);
         word-break: auto-phrase;
         text-wrap: pretty;
+        scroll-margin: var(--space-xxl);
     }
 
     h2 {
         padding-block-end: var(--space-s);
         margin-block-start: var(--space-xxl);
         font-size: var(--font-size-xxl);
-        scroll-margin: var(--space-xxl);
         border-bottom: solid 2px var(--color-primary-outline-l);
     }
 
     h3 {
         margin-block-start: var(--space-xl);
         font-size: var(--font-size-xl);
-        scroll-margin: var(--space-xl);
     }
 
     h4 {
         margin-block-start: var(--space-l);
         font-size: var(--font-size-l);
-        scroll-margin: var(--space-l);
     }
 
     a:is(:where(h2, h3, h4) > *) {

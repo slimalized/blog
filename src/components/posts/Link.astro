@@ -22,7 +22,7 @@ const isFootnoteRef = !isLinkCard && href.startsWith("#") && id !== undefined;
 {
     // footnote link
     isFootnoteLink && (
-        <a href={href}>
+        <a class="footnote" href={href}>
             <slot />
         </a>
     )
@@ -31,7 +31,7 @@ const isFootnoteRef = !isLinkCard && href.startsWith("#") && id !== undefined;
 {
     // footnote ref
     isFootnoteRef && (
-        <a id={id} href={href}>
+        <a id={id} class="footnote" href={href}>
             <slot />
         </a>
     )
@@ -147,5 +147,9 @@ const isFootnoteRef = !isLinkCard && href.startsWith("#") && id !== undefined;
             font-size: var(--font-size-xs);
             opacity: 0.75;
         }
+    }
+
+    a.footnote {
+        scroll-margin: var(--space-xxxl);
     }
 </style>

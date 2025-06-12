@@ -33,9 +33,20 @@ export const DetailsContent = ({ children }: DetailsContainerProps) => {
 			onToggle={handleDetailsToggle}
 		>
 			<summary tabIndex={-1} onClick={handleSummaryClick} onKeyDown={() => {}}>
-				<button type="button" onClick={handleButtonClick}>
-					{isOpen ? <ChevronUp /> : <ChevronDown />}
-					{isOpen ? "詳細を閉じる" : "詳細を開く"}
+				<button
+					className={styles["toggle-button"]}
+					aria-label={isOpen ? "Hide detail content" : "Show detail content"}
+					type="button"
+					onClick={handleButtonClick}
+				>
+					<div data-is-open={isOpen} className={styles["icon-container"]}>
+						<ChevronUp />
+						<ChevronDown />
+					</div>
+					<div data-is-open={isOpen} className={styles["text-container"]}>
+						<span>詳細を開く</span>
+						<span>詳細を隠す</span>
+					</div>
 				</button>
 			</summary>
 			{children}

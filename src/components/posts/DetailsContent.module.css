@@ -13,34 +13,97 @@
 	summary + * > *:first-child {
 		margin-block-start: var(--space-m);
 	}
+}
 
-	button:is(summary *) {
+.toggle-button {
+	display: flex;
+	column-gap: var(--space-xs);
+	align-items: center;
+	height: var(--button-height-m);
+	padding: var(--space-xs) var(--space-s);
+	font-size: var(--font-size-m);
+	line-height: var(--line-height-none);
+	color: var(--color-primary-text-h);
+	cursor: pointer;
+	background-color: var(--color-primary-container-l);
+	border: none;
+	border-radius: var(--border-radius-pill);
+	transition: transform 200ms;
+}
+
+@media (hover: hover) {
+	.toggle-button:hover {
+		background-color: var(--color-primary-container-m);
+	}
+}
+
+.toggle-button:active {
+	background-color: var(--color-primary-container-h);
+}
+
+div.text-container {
+	width: 5ic;
+	height: inherit;
+	overflow: hidden;
+
+	span {
+		position: absolute;
 		display: flex;
-		column-gap: var(--space-xs);
 		align-items: center;
-		padding: var(--space-xs) var(--space-s);
-		font-size: var(--font-size-xs);
+		justify-content: center;
+		width: 100%;
+		height: 100%;
+		font-size: var(--font-size-m);
 		color: var(--color-primary-text-h);
-		cursor: pointer;
-		background-color: var(--color-primary-container-l);
-		border: none;
-		border-radius: var(--border-radius-pill);
+		transition: transform 250ms, color 0ms;
 	}
 
-	@media (hover: hover) {
-		button:is(summary > *):hover {
-			background-color: var(--color-primary-container-m);
-		}
+	span:first-of-type {
+		top: 0;
 	}
 
-	button:is(summary > *):active {
-		background-color: var(--color-primary-container-h);
+	span:last-of-type {
+		top: 100%;
 	}
 
-	svg:is(summary > button > *) {
-		--size: var(--font-size-l);
+	&[data-is-open="false"] span:first-of-type,
+	&[data-is-open="false"] span:last-of-type {
+		transform: translateY(0%);
+	}
 
-		width: var(--size);
-		height: var(--size);
+	&[data-is-open="true"] span:first-of-type,
+	&[data-is-open="true"] span:last-of-type {
+		transform: translateY(-100%);
+	}
+}
+
+div.icon-container {
+	--size: var(--font-size-l);
+
+	width: var(--size);
+	height: inherit;
+	overflow: hidden;
+
+	svg {
+		position: absolute;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 100%;
+		height: 100%;
+		font-size: var(--font-size-m);
+		color: var(--color-primary-text-h);
+		opacity: 0;
+		transition: filter 250ms, opacity 250ms;
+	}
+
+	&[data-is-open="false"] svg:last-of-type,
+	&[data-is-open="true"] svg:first-of-type {
+		opacity: 1;
+	}
+
+	&[data-is-open="false"] svg:first-of-type,
+	&[data-is-open="true"] svg:last-of-type {
+		filter: blur(5px);
 	}
 }
