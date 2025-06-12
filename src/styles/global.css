@@ -80,11 +80,13 @@
 	}
 
 	html {
+		width: 100%;
 		container-type: inline-size;
 		container-name: root;
 	}
 
 	body {
+		width: 100cqw;
 		padding-block-start: var(--space-l);
 		font-family: var(--font-sans);
 		font-style: normal;

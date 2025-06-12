@@ -52,8 +52,9 @@
 	--font-weight-bold: 700;
 
 	/* width */
-	--width-base: min(720px, 92vw);
-	--width-header: min(1290px, 100cqw);
+	--width-base: min(720px, 92cqw);
+	--width-header: min(1290px, 92cqw);
+	--width-footer: min(1290px, 92cqw);
 
 	/* z-index */
 	--z-base: 1; /* badge */
