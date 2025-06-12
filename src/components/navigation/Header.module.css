@@ -1,0 +1,73 @@
+#header {
+	--header-gradient: linear-gradient(
+		to top,
+		color-mix(in srgb, transparent, var(--color-background) 0%) 0%,
+		color-mix(in srgb, transparent, var(--color-background) 4.9%) 15.5%,
+		color-mix(in srgb, transparent, var(--color-background) 10.4%) 22.5%,
+		color-mix(in srgb, transparent, var(--color-background) 45%) 47.1%,
+		color-mix(in srgb, transparent, var(--color-background) 55%) 52.9%,
+		color-mix(in srgb, transparent, var(--color-background) 89.6%) 77.5%,
+		color-mix(in srgb, transparent, var(--color-background) 95.1%) 91.9%,
+		color-mix(in srgb, transparent, var(--color-background) 100%) 100%
+	);
+
+	position: fixed;
+	top: 0;
+	right: 0;
+	left: 0;
+	z-index: var(--z-floating-ui);
+	display: flex;
+	justify-content: center;
+	width: 100cqw;
+	height: auto;
+	margin-inline: auto;
+	background-image: var(--header-gradient);
+
+	&::after,
+	&::before {
+		position: absolute;
+		top: 0;
+		left: 0;
+		width: 100%;
+		pointer-events: none;
+		user-select: none;
+		content: "";
+		mask-image: var(--header-gradient);
+		mask-composite: intersect;
+	}
+
+	&::before {
+		height: 100%;
+		backdrop-filter: blur(2px);
+	}
+
+	&::after {
+		height: 80%;
+		backdrop-filter: blur(4px);
+	}
+}
+
+nav:is(#header > *) {
+	z-index: var(--z-base);
+	display: flex;
+	justify-content: space-between;
+	width: var(--width-header);
+	padding-block: var(--space-s) var(--space-l);
+	isolation: isolate;
+	transition: opacity 200ms;
+
+	&[data-shown="false"] {
+		opacity: 0;
+	}
+}
+
+a#home-link {
+	display: flex;
+	place-items: center;
+	padding-inline: var(--space-s) var(--space-m);
+	font-family: Oldenburg, serif;
+	font-size: var(--font-size-l);
+	color: inherit;
+	text-decoration: none;
+	text-shadow: var(--box-shadow-m);
+}

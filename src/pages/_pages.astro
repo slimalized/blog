@@ -1,13 +1,16 @@
 ---
 import "../styles/global.css";
+import { ClientRouter } from "astro:transitions";
 import appleTouchIconPng from "../assets/apple-touch-icon.png";
 import faviconIco from "../assets/favicon.ico";
 import faviconSvg from "../assets/favicon.svg";
+import Footer from "../components/navigation/Footer.astro";
+import { Header } from "../components/navigation/Header.tsx";
 import { site } from "../utils/consts";
 
-interface Props {
+export interface Props {
     title: string;
-    type?: "article" | "404" | undefined;
+    type?: "article" | "404" | "home" | undefined;
     isNoIndex?: true | undefined;
     description?: string | undefined;
     ogImageSrc?: string | undefined;
@@ -92,8 +95,13 @@ const description = is404 ? title : (_description ?? site.description);
                 }
             })();
         </script>
+        <ClientRouter />
     </head>
     <body>
-        <slot />
+        <Header client:load />
+        <main>
+            <slot />
+        </main>
+        <Footer title={title} type={type} />
     </body>
 </html>

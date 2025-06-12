@@ -39,7 +39,7 @@ const fontOptimizingOptions: FontOptimizingOption[] = [
 		fontPath: "fonts/zen-kaku-gothic-new_medium_500.woff2",
 		includeTagNames: [...headers],
 	},
-	// JetBrains Mono (for <code>) is already subset in advance, so it is excluded.
+	// JetBrains Mono and Oldenburg are already subset in advance, so it is excluded.
 ];
 
 /**

@@ -40,6 +40,15 @@
 	font-display: swap;
 }
 
+@font-face {
+	font-family: Oldenburg;
+	font-style: normal;
+	font-weight: 400;
+	src: local("Oldenburg"), url("/fonts/oldenburg_regular_400.woff2")
+		format("woff2");
+	font-display: swap;
+}
+
 @layer reset, base, writing;
 
 @layer base {
@@ -54,6 +63,8 @@
 
 	html,
 	body {
+		height: max-content;
+		min-height: 100vh;
 		scrollbar-gutter: stable;
 		font-size: var(--font-size-m);
 		font-weight: var(--font-weight-regular);
@@ -68,12 +79,26 @@
 		text-spacing-trim: trim-start;
 	}
 
+	html {
+		container-type: inline-size;
+		container-name: root;
+	}
+
 	body {
-		width: var(--width-base);
-		margin-inline: auto;
+		padding-block-start: var(--space-l);
 		font-family: var(--font-sans);
 		font-style: normal;
 		font-weight: 400;
+	}
+
+	body > footer {
+		position: sticky;
+		top: 100vh;
+	}
+
+	main {
+		width: var(--width-base);
+		margin-inline: auto;
 	}
 
 	pre {
@@ -121,7 +146,7 @@
 	}
 }
 
-@media (prefers-color-scheme: dark) {
+:root[data-theme="dark"] {
 	@layer base {
 		.astro-code,
 		.astro-code span {

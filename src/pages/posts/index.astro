@@ -15,6 +15,7 @@ const sortedPosts = posts.sort((a, b) => {
 ---
 
 <Layout title="posts">
+    <h1>ポスト一覧</h1>
     <ul>
         {
             sortedPosts.map((post) => {
@@ -22,10 +23,8 @@ const sortedPosts = posts.sort((a, b) => {
                 return (
                     <li>
                         <a href={`/posts/${post.id}`}>
-                            <p>
-                                <span>{post.data.title}</span>
-                                <time datetime={date}>{date}</time>
-                            </p>
+                            <time datetime={date}>{date}</time>
+                            <h2>{post.data.title}</h2>
                         </a>
                     </li>
                 );
