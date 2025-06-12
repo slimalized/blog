@@ -73,6 +73,25 @@ const description = is404 ? title : (_description ?? site.description);
         />
         <link rel="apple-touch-icon" href={appleTouchIconPng.src} />
         {!is404 && <link rel="canonical" href={Astro.url} />}
+        <script is:inline>
+            (function () {
+                const theme = localStorage.getItem("site-theme");
+                if (theme === "dark" || theme === "light") {
+                    document.documentElement.setAttribute("data-theme", theme);
+                } else {
+                    const preferTheme = window.matchMedia(
+                        "(prefers-color-scheme: dark)",
+                    )
+                        ? "dark"
+                        : "light";
+                    localStorage.setItem("site-theme", preferTheme);
+                    document.documentElement.setAttribute(
+                        "data-theme",
+                        preferTheme,
+                    );
+                }
+            })();
+        </script>
     </head>
     <body>
         <slot />
