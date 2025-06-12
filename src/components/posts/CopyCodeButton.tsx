@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
-import { useCopy } from "../utils/hooks/useCopy";
-import { useRipples } from "../utils/hooks/useRipples";
+import { useCopy } from "../../utils/hooks/useCopy";
+import { useRipples } from "../../utils/hooks/useRipples";
 import styles from "./CopyCodeButton.module.css";
 
 interface CopyCodeButtonProps {

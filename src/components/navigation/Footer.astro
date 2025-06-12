@@ -1,0 +1,97 @@
+---
+import { Image } from "astro:assets";
+import type { Props } from "../../pages/_pages.astro";
+import icon from "../../assets/favicon.svg";
+import Breadcrumbs from "./Breadcrumbs.astro";
+---
+
+<footer>
+	<Breadcrumbs {...Astro.props} />
+	<div class="footer-wrapper">
+		<a href="/" class="home-link">
+			<Image src={icon} alt={"slimalized icon"} width={20} height={20} />
+			<h4>slimalized.dev</h4>
+		</a>
+		<p class="about">
+			slimalizedの個人サイトです。散歩と寿司が大好き。<br />
+			このサイトの内容は
+			<a
+				href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.ja"
+				target="_blank"
+				rel="noopener noreferrer"
+			>
+				CC BY-NC-SA 4.0
+			</a>
+			の下で提供されています。また、 GitHubで
+			<!-- @TODO: 公開後にソースを置き換え -->
+			<a href="/" target="_blank" rel="noopener noreferrer">サイトのソース</a>
+			を公開しています。
+		</p>
+	</div>
+</footer>
+
+<style>
+	footer {
+		width: 100%;
+		margin-block-start: var(--space-xxl);
+	}
+
+	div.footer-wrapper {
+		display: flex;
+		flex-flow: column wrap;
+		gap: var(--space-s) min(4vw, var(--space-l));
+
+		/* align-items: center; */
+		width: var(--width-header);
+		padding-block: var(--space-xxl) var(--space-xxxl);
+		padding-inline: min(4vw, var(--space-l));
+		margin-inline: auto;
+		border-block-start: solid 1px var(--color-primary-outline-l);
+	}
+
+	a.home-link {
+		display: inline-flex;
+		column-gap: var(--space-xs);
+		place-items: center;
+		width: max-content;
+		font-family: Oldenburg, serif;
+		font-size: var(--font-size-l);
+		font-weight: var(--font-weight-medium);
+		color: inherit;
+		text-decoration: none;
+
+		img {
+			--size: 1.25rem;
+
+			width: var(--size);
+			height: var(--size);
+		}
+
+		h4 {
+			font-weight: inherit;
+		}
+
+		span {
+			opacity: 0.5;
+		}
+	}
+
+	@media (hover: hover) {
+		a:not(.home-link):hover {
+			color: var(--color-primary-text-h);
+		}
+	}
+
+	p.about {
+		margin-block-start: 0;
+		font-size: var(--font-size-xs);
+		color: var(--color-primary-text-l);
+		text-align: left;
+		word-break: auto-phrase;
+		text-wrap: pretty;
+
+		a {
+			color: inherit;
+		}
+	}
+</style>

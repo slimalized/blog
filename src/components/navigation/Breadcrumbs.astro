@@ -1,0 +1,106 @@
+---
+import type { Props } from "../../pages/_pages.astro";
+
+interface Breadcrumb {
+    href: string;
+    title: string;
+}
+
+const { pathname: _pathname, origin } = Astro.url;
+const { title: contentTitle, type } = Astro.props as Pick<
+    Props,
+    "title" | "type"
+>;
+
+const footerTitleMapping = {
+    "/": "home",
+    "/posts": "posts",
+};
+
+const isRoot = (segment: string) => segment === "";
+
+// Breadcrumbs
+const pathSegments = _pathname.split("/");
+const breadcrumbs: Breadcrumb[] = [];
+let base = origin;
+for (const segment of pathSegments) {
+    const { pathname, href } = new URL(segment, base);
+    const title: string | undefined =
+        footerTitleMapping[pathname as keyof typeof footerTitleMapping];
+
+    breadcrumbs.push({
+        href: isRoot(segment) ? origin : href,
+        title: title !== undefined ? title : (contentTitle ?? segment),
+    });
+
+    base = isRoot(segment) ? href : `${href}/`;
+}
+---
+
+<nav>
+    <ul>
+        {
+            type !== "home" &&
+                breadcrumbs.map((breadcrumb, index) => (
+                    <li>
+                        {index > 0 && <span class="separator">/</span>}
+                        {index !== breadcrumbs.length - 1 ? (
+                            <a href={breadcrumb.href}>{breadcrumb.title}</a>
+                        ) : (
+                            <span>{breadcrumb.title}</span>
+                        )}
+                    </li>
+                ))
+        }
+    </ul>
+</nav>
+
+<style>
+    nav {
+        display: grid;
+        place-items: center;
+        width: 100%;
+
+        .separator:is(li:not(:first-of-type) > *) {
+            min-width: max-content;
+            margin-inline-end: var(--space-s);
+            color: var(--gray-a6);
+        }
+    }
+
+    a,
+    span {
+        margin-block: var(--space-s);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        font-size: var(--font-size-m);
+        color: inherit;
+        white-space: nowrap;
+    }
+
+    @media (hover: hover) {
+        a:hover {
+            color: var(--color-primary-text-h);
+        }
+    }
+
+    ul {
+        display: inline-flex;
+        column-gap: var(--space-s);
+        width: calc(var(--width-header));
+        padding-inline: min(4vw, var(--space-l));
+        margin-top: 0;
+    }
+
+    li {
+        display: flex;
+        width: max-content;
+        color: var(--color-primary-text-l);
+        marker: none;
+    }
+
+    li:last-of-type {
+        min-width: 0;
+        color: inherit;
+    }
+</style>
