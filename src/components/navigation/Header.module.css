@@ -1,16 +1,4 @@
 #header {
-	--header-gradient: linear-gradient(
-		to top,
-		color-mix(in srgb, transparent, var(--color-background) 0%) 0%,
-		color-mix(in srgb, transparent, var(--color-background) 4.9%) 15.5%,
-		color-mix(in srgb, transparent, var(--color-background) 10.4%) 22.5%,
-		color-mix(in srgb, transparent, var(--color-background) 45%) 47.1%,
-		color-mix(in srgb, transparent, var(--color-background) 55%) 52.9%,
-		color-mix(in srgb, transparent, var(--color-background) 89.6%) 77.5%,
-		color-mix(in srgb, transparent, var(--color-background) 95.1%) 91.9%,
-		color-mix(in srgb, transparent, var(--color-background) 100%) 100%
-	);
-
 	position: fixed;
 	top: 0;
 	right: 0;
@@ -21,7 +9,7 @@
 	width: 100cqw;
 	height: auto;
 	margin-inline: auto;
-	background-image: var(--header-gradient);
+	background-image: var(--top-gradient);
 
 	&::after,
 	&::before {
@@ -32,7 +20,7 @@
 		pointer-events: none;
 		user-select: none;
 		content: "";
-		mask-image: var(--header-gradient);
+		mask-image: var(--top-gradient);
 		mask-composite: intersect;
 	}
 

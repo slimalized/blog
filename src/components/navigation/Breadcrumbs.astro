@@ -70,7 +70,7 @@ for (const segment of pathSegments) {
 
     a,
     span {
-        margin-block: var(--space-s);
+        margin-block: var(--space-xs);
         overflow: hidden;
         text-overflow: ellipsis;
         font-size: var(--font-size-m);
@@ -87,8 +87,10 @@ for (const segment of pathSegments) {
     ul {
         display: inline-flex;
         column-gap: var(--space-s);
-        width: calc(var(--width-header));
-        padding-inline: min(4vw, var(--space-l));
+        width: calc(var(--width-footer));
+
+        /* padding-inline: min(4vw, var(--space-l)); */
+        padding-inline-start: 0;
         margin-top: 0;
     }
 

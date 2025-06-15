@@ -3,5 +3,18 @@
 		"stylelint-config-standard",
 		"stylelint-config-recess-order",
 		"stylelint-config-html/astro"
+	],
+	"overrides": [
+		{
+			"files": ["*.css", "*.astro"],
+			"rules": {
+				"selector-pseudo-class-no-unknown": [
+					true,
+					{
+						"ignorePseudoClasses": ["global"]
+					}
+				]
+			}
+		}
 	]
 }

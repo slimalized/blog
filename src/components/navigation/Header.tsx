@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useThrottle } from "../../utils/hooks/useThrottle";
 import { ToggleThemeButton } from "../ToggleThemeButton";
 import styles from "./Header.module.css";
@@ -9,15 +9,15 @@ import styles from "./Header.module.css";
  */
 export const Header = () => {
 	const [isHeaderShown, setIsHeaderShown] = useState(true);
-	const [lastPosition, setLastPosition] = useState(0);
+	const lastPositionRef = useRef(0);
 
 	const handleScroll = useCallback(() => {
 		const currentPosition = window.scrollY;
-		const offset = lastPosition - currentPosition;
+		const offset = lastPositionRef.current - currentPosition;
 
-		setLastPosition(currentPosition);
+		lastPositionRef.current = currentPosition;
 		setIsHeaderShown(offset >= 0);
-	}, [lastPosition]);
+	}, []);
 
 	const throttledScroll = useThrottle(handleScroll, 100);
 

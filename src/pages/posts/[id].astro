@@ -1,5 +1,6 @@
 ---
 import { getCollection, render } from "astro:content";
+import { TableOfContents } from "../../components/navigation/TableOfContents";
 import Blockquote from "../../components/posts/Blockquote.astro";
 import CodeBlock from "../../components/posts/CodeBlock.astro";
 import Details from "../../components/posts/Details.astro";
@@ -17,7 +18,7 @@ export async function getStaticPaths() {
 }
 
 const { post } = Astro.props;
-const { Content } = await render(post);
+const { Content, headings } = await render(post);
 const date = formatDate(post.data.publishedDate);
 
 const components = {
@@ -32,7 +33,82 @@ const components = {
 ---
 
 <Layout title={post.data.title} type="article">
-    <h1>{post.data.title}</h1>
-    <p>{date}</p>
-    <Content components={components} />
+    <nav id="side-menu">
+        <div class="toc-wrapper">
+            <TableOfContents headings={headings} client:load />
+        </div>
+    </nav>
+    <article>
+        <h1>{post.data.title}</h1>
+        <p>{date}</p>
+        <Content components={components} />
+    </article>
 </Layout>
+
+<style>
+    :global(main:has(nav#side-menu, article)) {
+        display: grid;
+        grid-template-areas: "toc article .";
+        grid-template-columns: 1fr var(--width-base) 1fr;
+        column-gap: 1rem;
+        width: max-content;
+        margin-inline: auto;
+    }
+
+    nav#side-menu {
+        --width-toc: 280px;
+
+        position: sticky;
+        top: calc((100vh - var(--toc-max-height)) / 2);
+        display: block;
+        grid-area: toc;
+        width: var(--width-toc);
+        height: max-content;
+        margin-inline: auto;
+        transition: opacity 100ms;
+    }
+
+    @media (width <= 1340px) {
+        :global(main) {
+            display: grid;
+            grid-template-areas: ". article .";
+            grid-template-columns: 1fr var(--width-base) 1fr;
+        }
+
+        nav#side-menu {
+            display: none;
+        }
+    }
+
+    article {
+        grid-area: article;
+        width: var(--width-base);
+    }
+
+    div.toc-wrapper {
+        width: 100%;
+    }
+
+    div.toc-wrapper::before,
+    div.toc-wrapper::after {
+        position: absolute;
+        left: 0;
+        z-index: var(--z-popover-ui);
+        display: block;
+        width: 100%;
+        height: calc(var(--font-size-s) * var(--line-height-jp-m));
+        pointer-events: none;
+        user-select: none;
+        content: "";
+    }
+
+    div.toc-wrapper::before {
+        top: 0;
+        background-image: var(--top-gradient);
+    }
+
+    div.toc-wrapper::after {
+        bottom: 0;
+        background-image: var(--bottom-gradient);
+    }
+</style>
