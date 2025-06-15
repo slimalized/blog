@@ -81,8 +81,8 @@
 
 	html {
 		width: 100%;
-		container-type: inline-size;
 		container-name: root;
+		container-type: inline-size;
 	}
 
 	body {
@@ -96,11 +96,6 @@
 	body > footer {
 		position: sticky;
 		top: 100vh;
-	}
-
-	main {
-		width: var(--width-base);
-		margin-inline: auto;
 	}
 
 	pre {
@@ -148,7 +143,13 @@
 	}
 }
 
+:root[data-theme="light"] {
+	color-scheme: light;
+}
+
 :root[data-theme="dark"] {
+	color-scheme: dark;
+
 	@layer base {
 		.astro-code,
 		.astro-code span {
