@@ -31,7 +31,7 @@ const title = _title ?? langID[lang] ?? lang;
 <figure>
     <figcaption>
         <span data-title={title}>{title}</span>
-        <CopyCodeButton code={code} codeBlockId={id} client:load />
+        <CopyCodeButton code={code} codeBlockId={id} client:visible />
     </figcaption>
     <div>
         <div id={id} aria-hidden="true"></div>

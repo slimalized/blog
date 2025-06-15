@@ -35,7 +35,7 @@ const components = {
 <Layout title={post.data.title} type="article">
     <nav id="side-menu">
         <div class="toc-wrapper">
-            <TableOfContents headings={headings} client:load />
+            <TableOfContents headings={headings} client:visible />
         </div>
     </nav>
     <article>
