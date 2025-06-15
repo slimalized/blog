@@ -7,7 +7,7 @@
 	margin-inline-end: var(--space-xs);
 	overflow: hidden;
 	cursor: pointer;
-	background-color: var(--color-primary-container-la);
+	background-color: transparent;
 	border: none;
 	border-radius: var(--border-radius-pill);
 	backdrop-filter: blur(5px);
@@ -47,17 +47,10 @@
 
 @media (hover: hover) {
 	#toggle-theme-button:hover {
-		background-color: var(--color-primary-container-ma);
+		background-color: var(--color-primary-container-la);
 	}
 }
 
 #toggle-theme-button:active {
-	background-color: var(--color-primary-container-ha);
+	background-color: var(--color-primary-container-ma);
 }
-
-/* span:is(button > *) {
-	position: absolute;
-	inset: 0;
-	margin: auto;
-	line-height: var(--line-height-lt-m);
-} */
