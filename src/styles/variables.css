@@ -52,8 +52,9 @@
 	--font-weight-bold: 700;
 
 	/* width */
-	--width-base: min(720px, 92cqw);
-	--width-header: min(1290px, 96cqw);
+	--width-base: min(1290px, 92cqw);
+	--width-article: min(720px, 92cqw);
+	--width-header: 100cqw;
 	--width-footer: min(1290px, 92cqw);
 
 	/* height */

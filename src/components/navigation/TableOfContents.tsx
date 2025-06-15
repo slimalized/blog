@@ -1,6 +1,6 @@
 import type { MarkdownHeading } from "astro";
 import { useEffect, useRef, useState } from "react";
-import type { JSX } from "react";
+import type { JSX, RefObject } from "react";
 import styles from "./TableOfContents.module.css";
 
 // Only headings of levels 2, 3, and 4 are used in the article.
@@ -15,7 +15,7 @@ const CreateTableOfContentsList = (
 	headings: MarkdownHeading[],
 	baseDepth: Depth,
 	activeIds: Set<string>,
-	itemRefs: React.MutableRefObject<Record<string, HTMLAnchorElement | null>>,
+	itemRefs: RefObject<Record<string, HTMLAnchorElement | null>>,
 ) => {
 	const toc: JSX.Element[] = [];
 	for (const [index, heading] of Object.entries(headings)) {
@@ -150,8 +150,13 @@ export const TableOfContents = ({
 	if (headings.length === 0) return null;
 
 	return (
-		<nav id={styles["table-of-contents"]}>
-			{CreateTableOfContentsList(headings, 2, activeIds, itemRefs)}
-		</nav>
+		<div
+			id={styles["table-of-contents-wrapper"]}
+			aria-label="Table of Contents"
+		>
+			<nav id={styles["table-of-contents"]}>
+				{CreateTableOfContentsList(headings, 2, activeIds, itemRefs)}
+			</nav>
+		</div>
 	);
 };
