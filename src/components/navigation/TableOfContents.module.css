@@ -18,6 +18,34 @@ nav#table-of-contents {
 	animation-timeline: scroll(self);
 }
 
+div#table-of-contents-wrapper {
+	width: 100%;
+}
+
+div#table-of-contents-wrapper::before,
+div#table-of-contents-wrapper::after {
+	position: absolute;
+	left: 0;
+	z-index: var(--z-popover-ui);
+	display: block;
+	width: 100%;
+	height: calc(var(--font-size-s) * var(--line-height-jp-m));
+	pointer-events: none;
+	user-select: none;
+	content: "";
+}
+
+	div#table-of-contents-wrapper::before {
+	top: 0;
+	background-image: var(--top-gradient);
+}
+
+div#table-of-contents-wrapper::after {
+	bottom: 0;
+	background-image: var(--bottom-gradient);
+}
+
+
 p:is(nav#table-of-contents > *) {
 	margin-block-start: 0;
 	font-size: var(--font-size-s);
