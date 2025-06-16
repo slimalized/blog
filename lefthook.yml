@@ -16,14 +16,14 @@ pre-commit:
         - rebase
     - name: StyleLint
       glob: "*.{css,astro}"
-      run: bun run stylelint {staged_files}
+      run: stylelint --ignore-path .gitignore {staged_files}
       stage_fixed: true
       skip:
         - merge
         - rebase
     - name: Prettier
       glob: "*.astro"
-      run: bun run prettier {staged_files}
+      run: prettier --ignore-path .gitignore --write {staged_files}
       stage_fixed: true
       skip:
         - merge
