@@ -203,7 +203,7 @@ export const fontOptimizer = (): AstroIntegration => ({
 				return;
 			}
 
-			console.log(kleur.bgGreen(" optimizing fonts ")); // log start
+			console.log(kleur.bgGreen().black(" optimizing fonts ")); // log start
 
 			for (const fontOptimizingOption of fontOptimizingOptions) {
 				const logInfo = await optimizeFonts(
@@ -215,7 +215,9 @@ export const fontOptimizer = (): AstroIntegration => ({
 					const logMessage = [
 						kleur.gray("Optimized"),
 						logInfo.fontPath,
-						kleur.gray(`(${kleur.red(fileKBSize(logInfo.prevFileSize))} kB ->`),
+						kleur.gray(
+							`(${kleur.yellow(fileKBSize(logInfo.prevFileSize))} kB ->`,
+						),
 						kleur.green(fileKBSize(logInfo.optimizedFileSize)),
 						kleur.gray(`kB | ${logInfo.charsLength} chars)`),
 					].join(" ");

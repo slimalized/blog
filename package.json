@@ -11,7 +11,8 @@
 		"biome:format": "biome format --write",
 		"biome:lint": "biome lint --write",
 		"prettier": "prettier --ignore-path .gitignore --write 'src/**/*.{md,astro}'",
-		"stylelint": "stylelint --ignore-path .gitignore 'src/**/*.{css,astro}'"
+		"stylelint": "stylelint --ignore-path .gitignore 'src/**/*.{css,astro}'",
+		"postgen": "src/scripts/postgen.mts"
 	},
 	"dependencies": {
 		"@astrojs/mdx": "^4.3.0",
@@ -21,12 +22,14 @@
 		"@types/react-dom": "^19.1.6",
 		"@types/subset-font": "^2.3.0",
 		"astro": "5.9.3",
+		"inquirer": "^12.6.3",
 		"jsdom": "^26.1.0",
 		"lucide-react": "^0.513.0",
 		"open-graph-scraper": "^6.10.0",
 		"react": "^19.1.0",
 		"react-dom": "^19.1.0",
-		"subset-font": "^2.4.0"
+		"subset-font": "^2.4.0",
+		"zx": "^8.5.5"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "1.9.4",
