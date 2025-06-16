@@ -1,6 +1,8 @@
 button.copy-button {
 	display: flex;
-	place-items: center;
+	align-items: center;
+	justify-content: end;
+	min-width: calc(11ch + var(--space-m)); /* 11 = string length of `copied code` */
 	height: max-content;
 	padding: 0;
 	padding-block: 4px;
