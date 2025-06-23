@@ -4,8 +4,7 @@ button.copy-button {
 	justify-content: end;
 	min-width: calc(11ch + var(--space-m)); /* 11 = string length of `copied code` */
 	height: max-content;
-	padding: 0;
-	padding-block: 4px;
+	padding: 4px 0;
 	font-family: var(--font-mono);
 	font-size: var(--font-size-s);
 	line-height: var(--line-height-none);
