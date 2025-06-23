@@ -1,4 +1,4 @@
-import * as fs from "node:fs/promises";
+import fs from "node:fs/promises";
 import type { AstroIntegration, AstroIntegrationLogger } from "astro";
 import { JSDOM } from "jsdom";
 import kleur from "kleur";
