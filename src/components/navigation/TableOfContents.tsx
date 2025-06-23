@@ -18,7 +18,7 @@ const CreateTableOfContentsList = (
 	itemRefs: RefObject<Record<string, HTMLAnchorElement | null>>,
 ) => {
 	const toc: JSX.Element[] = [];
-	for (const [index, heading] of Object.entries(headings)) {
+	for (const [index, heading] of headings.entries()) {
 		const { depth: currentDepth, slug, text } = heading;
 
 		if (!isValidDepth(currentDepth)) {
@@ -29,7 +29,7 @@ const CreateTableOfContentsList = (
 		if (currentDepth < baseDepth) break;
 
 		if (currentDepth === baseDepth) {
-			const nextIndex = Number(index) + 1;
+			const nextIndex = index + 1;
 			const nextDepth: number | undefined = headings[nextIndex]?.depth;
 			toc.push(
 				<li key={slug}>
