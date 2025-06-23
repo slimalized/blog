@@ -3,7 +3,7 @@
 import { $, echo } from "zx";
 import { input, confirm } from "@inquirer/prompts";
 import kleur from "kleur";
-import { formatDate } from "../../src/utils/formatDate";
+import { formatDate } from "../formatDate";
 
 // Check if the path already exists.
 const isExistingPath = async (path: string) => {
@@ -30,8 +30,7 @@ const theme = {
 };
 
 try {
-	echo("");
-	echo(kleur.bgYellow().black(" confirm new post details "));
+	echo(kleur.gray("| Create new post"));
 
 	const path = await input({
 		message: `${kleur.gray("(1/4)")} What is the path of the post? :`,
@@ -83,8 +82,6 @@ try {
 
 	await $`echo -e ${frontmatter} > src/content/posts/${path}.mdx`;
 
-	echo("");
-	echo(kleur.bgGreen().black(" create new post "));
 	echo(`${kleur.green("✓")} Create mdx file to src/content/posts/${path}.mdx:`);
 	echo(await $`cat src/content/posts/${path}.mdx`);
 
