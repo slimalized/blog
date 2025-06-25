@@ -1,0 +1,90 @@
+---
+import { ArrowUpRight } from "lucide-react";
+import { CopyUrlButton } from "./CopyUrlButton";
+
+interface Props {
+    href: string;
+    title: string;
+}
+
+const { href, title } = Astro.props;
+const getTweetShareUrl = (href: string, title: string) => {
+    const url = new URL("https://x.com/intent/tweet");
+    url.searchParams.set("title", `${title} | slimalized\n`);
+    url.searchParams.set("url", href);
+    return url.toString();
+};
+---
+
+<section>
+    <span class="share-on-x">
+        <a
+            href={getTweetShareUrl(href, title)}
+            target="_blank"
+            rel="noopener noreferrer"
+        >
+            Xで記事をシェアする
+            <ArrowUpRight />
+        </a>
+    </span>
+    <CopyUrlButton href={href} client:visible />
+</section>
+
+<style>
+    section {
+        display: flex;
+        flex-direction: column;
+        row-gap: var(--space-m);
+        align-items: flex-end;
+        width: 100%;
+        padding-block-start: var(--space-l);
+        margin-block-start: var(--space-xxl);
+        margin-inline-start: auto;
+        border-block-start: dashed 1px var(--color-primary-outline-l);
+    }
+
+    h4 {
+        margin-block-start: var(--space-xl);
+        font-family: var(--font-sans-variant);
+        font-size: var(--font-size-xl);
+        font-weight: var(--font-weight-medium);
+        line-height: var(--line-height-jp-m);
+        word-break: auto-phrase;
+        text-wrap: pretty;
+        scroll-margin: var(--space-xxxl);
+    }
+
+    span.share-on-x {
+        a {
+            display: flex;
+            flex-direction: row;
+            column-gap: 4px;
+            align-items: center;
+            padding: var(--space-s) var(--space-m) var(--space-s) var(--space-l);
+            font-size: var(--font-size-m);
+            line-height: var(--line-height-none);
+            text-decoration: none;
+            background-color: var(--blue-3);
+            border-radius: var(--border-radius-pill);
+
+            svg {
+                --size: var(--font-size-m);
+
+                width: var(--size);
+                height: var(--size);
+                margin-block-start: 2px;
+                color: var(--color-link-base);
+            }
+        }
+    }
+
+    @media (hover: hover) {
+        a:is(span.share-on-x > *):hover {
+            background-color: var(--blue-4);
+        }
+    }
+
+    a:is(span.share-on-x > *):active {
+        background-color: var(--blue-5);
+    }
+</style>
