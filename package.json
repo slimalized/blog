@@ -32,6 +32,7 @@
 		"open-graph-scraper": "^6.10.0",
 		"react": "^19.1.0",
 		"react-dom": "^19.1.0",
+		"satori": "^0.15.2",
 		"subset-font": "^2.4.0",
 		"wrangler": "^4.20.0",
 		"zx": "^8.5.5"

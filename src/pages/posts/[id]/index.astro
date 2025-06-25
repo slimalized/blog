@@ -1,0 +1,143 @@
+---
+import { getCollection, render } from "astro:content";
+import Share from "../../../components/Share.astro";
+import NavLink from "../../../components/navigation/NavLink.astro";
+import { TableOfContents } from "../../../components/navigation/TableOfContents";
+import Blockquote from "../../../components/posts/Blockquote.astro";
+import CodeBlock from "../../../components/posts/CodeBlock.astro";
+import Details from "../../../components/posts/Details.astro";
+import Heading from "../../../components/posts/Heading.astro";
+import ImageFigure from "../../../components/posts/ImageFigure.astro";
+import Link from "../../../components/posts/Link.astro";
+import Thumbnail from "../../../components/posts/Thumbnail.astro";
+import { formatDate } from "../../../utils/formatDate";
+import Layout from "../../_pages.astro";
+
+export async function getStaticPaths() {
+    const posts = await getCollection("posts");
+    return posts.map((post) => ({
+        params: { id: post.id },
+        props: { post },
+    }));
+}
+
+const { href } = Astro.url;
+const { post } = Astro.props;
+const { Content, headings } = await render(post);
+const { title, publishedDate, hide, thumbnail } = post.data;
+
+// 記事特有のOG画像のURLを生成
+const ogImageSrc = `/posts/${post.id}/og-image.png`;
+
+const components = {
+    h2: Heading,
+    h3: Heading,
+    h4: Heading,
+    pre: CodeBlock,
+    a: Link,
+    blockquote: Blockquote,
+    details: Details,
+    img: ImageFigure,
+};
+---
+
+<Layout title={title} type="article" ogImageSrc={ogImageSrc}>
+    <nav id="side-menu">
+        <TableOfContents headings={headings} client:visible />
+    </nav>
+    <article>
+        <header>
+            <NavLink href="/posts" text="書いたもの" direction="back" />
+            {
+                thumbnail ? (
+                    <Thumbnail src={thumbnail} alt={title} />
+                ) : (
+                    <Thumbnail />
+                )
+            }
+            <p>
+                <time id="published-date">
+                    {formatDate(publishedDate)}
+                </time>
+            </p>
+            <h1 id="title">{title}</h1>
+        </header>
+        <Content components={components} />
+        {!hide && <Share title={title} href={href} />}
+    </article>
+</Layout>
+
+<style>
+    :global(main:has(nav#side-menu, article)) {
+        display: grid;
+        width: max-content;
+        min-height: 100vh;
+        margin-inline: auto;
+    }
+
+    nav#side-menu {
+        --width-toc: 280px;
+
+        position: sticky;
+        top: calc((100vh - var(--toc-max-height)) / 2);
+        display: block;
+        grid-area: toc;
+        width: var(--width-toc);
+        height: max-content;
+        margin-inline: auto;
+        transition: opacity 100ms;
+    }
+
+    @media (width > 1536px) {
+        :global(main:has(nav#side-menu, article)) {
+            grid-template-areas: "toc article 0";
+            grid-template-columns: 1fr var(--width-article) 1fr;
+            column-gap: 2rem;
+        }
+    }
+
+    @media (1152px < width <= 1536px) {
+        :global(main:has(nav#side-menu, article)) {
+            grid-template-areas: "toc article .";
+            grid-template-columns: 1fr var(--width-article) 0;
+            column-gap: 2rem;
+        }
+    }
+
+    @media (width <= 1152px) {
+        :global(main:has(nav#side-menu, article)) {
+            grid-template-areas: ". article .";
+            grid-template-columns: 0 var(--width-article) 0;
+            column-gap: 0;
+        }
+
+        nav#side-menu {
+            display: none;
+        }
+    }
+
+    article {
+        grid-area: article;
+        width: var(--width-article);
+    }
+
+    :global(header + *) {
+        margin-block-start: var(--space-xxl);
+    }
+
+    :global(figure.thumbnail) {
+        margin-block-start: var(--space-xl);
+    }
+
+    h1#title {
+        margin-block-start: var(--space-xs);
+    }
+
+    time#published-date {
+        color: var(--color-primary-text-l);
+    }
+
+    p {
+        margin-block-start: var(--space-l);
+    }
+</style>

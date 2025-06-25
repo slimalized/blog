@@ -1,5 +1,6 @@
 ---
 import { getCollection } from "astro:content";
+import PostsOgImagePng from "../../assets/posts-og-image.png";
 import PostList from "../../components/PostList.astro";
 import NavLink from "../../components/navigation/NavLink.astro";
 import Layout from "../_pages.astro";
@@ -15,7 +16,7 @@ const sortedPosts = posts.sort((a, b) => {
 });
 ---
 
-<Layout title="書いたもの">
+<Layout title="書いたもの" ogImageSrc={PostsOgImagePng.src}>
     <NavLink href="/" text="ホーム" direction="back" />
     <h1>書いたもの</h1>
     <PostList posts={sortedPosts} />
