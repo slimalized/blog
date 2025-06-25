@@ -1,7 +1,45 @@
 ---
+import { CircleAlert } from "lucide-react";
+import NavLink from "../components/navigation/NavLink.astro";
 import Layout from "./_pages.astro";
 ---
 
 <Layout type="404" title="ページが見つかりませんでした">
-    <p>ページが見つかりませんでした</p>
+    <div>
+        <CircleAlert />
+        <h2>ページが見つかりませんでした</h2>
+        <NavLink href="/" text="ホームに戻る" align="center" direction="back" />
+    </div>
 </Layout>
+
+<style>
+    h2 {
+        margin-block-start: var(--space-l);
+        font-family: var(--font-sans-variant);
+        font-size: var(--font-size-xxl);
+        font-weight: var(--font-weight-medium);
+        line-height: var(--line-height-jp-s);
+        color: var(--color-primary-text-l);
+        word-break: auto-phrase;
+        text-wrap: pretty;
+    }
+
+    svg {
+        --size: 6.4rem;
+
+        width: var(--size);
+        height: var(--size);
+        color: var(--color-primary-text-l);
+    }
+
+    a {
+        font-size: var(--font-size-xl);
+    }
+
+    div {
+        display: grid;
+        row-gap: var(--space-l);
+        place-items: center;
+        margin-block-start: 20vh;
+    }
+</style>

@@ -13,27 +13,34 @@ const { title: contentTitle, type } = Astro.props as Pick<
 >;
 
 const footerTitleMapping = {
-    "/": "home",
-    "/posts": "posts",
+    "/": "ホーム",
+    "/posts": "書いたもの",
+    "/works": "作ったもの",
 };
 
-const isRoot = (segment: string) => segment === "";
-
-// Breadcrumbs
-const pathSegments = _pathname.split("/");
+const pathSegments = _pathname.split("/").filter(Boolean);
 const breadcrumbs: Breadcrumb[] = [];
-let base = origin;
-for (const segment of pathSegments) {
-    const { pathname, href } = new URL(segment, base);
-    const title: string | undefined =
-        footerTitleMapping[pathname as keyof typeof footerTitleMapping];
 
+// Add route.
+breadcrumbs.push({
+    href: origin,
+    title: footerTitleMapping["/"],
+});
+
+// Add breadcrumb per segment.
+let currentPath = "";
+for (const [i, segment] of pathSegments.entries()) {
+    currentPath += `/${segment}`;
+    const href = origin + currentPath;
+    const isLast = i === pathSegments.length - 1;
     breadcrumbs.push({
-        href: isRoot(segment) ? origin : href,
-        title: title !== undefined ? title : (contentTitle ?? segment),
+        href,
+        title: isLast
+            ? (contentTitle ?? segment)
+            : (footerTitleMapping[
+                  currentPath as keyof typeof footerTitleMapping
+              ] ?? segment),
     });
-
-    base = isRoot(segment) ? href : `${href}/`;
 }
 ---
 

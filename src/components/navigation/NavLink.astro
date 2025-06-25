@@ -1,0 +1,71 @@
+---
+import { ArrowLeft, ArrowRight } from "lucide-react";
+
+interface Props {
+    href: string;
+    text: string;
+    align?: "center" | "left" | "right";
+    direction?: "go" | "back";
+}
+
+const { href, text, align = "left", direction = "go" } = Astro.props;
+---
+
+<div class=`nav-link ${align}`>
+    <a href={href}>
+        {direction === "back" && <ArrowLeft />}
+        {text}
+        {direction === "go" && <ArrowRight />}
+    </a>
+</div>
+
+<style>
+    div.nav-link {
+        display: flex;
+        width: 100%;
+
+        &.left {
+            justify-content: flex-start;
+        }
+
+        &.center {
+            justify-content: center;
+        }
+
+        &.right {
+            justify-content: flex-end;
+        }
+    }
+
+    a {
+        display: flex;
+        flex-direction: row;
+        column-gap: var(--space-xs);
+        align-items: center;
+        padding: 2px 4px;
+        font-size: var(--font-size-l);
+        text-decoration: none;
+        border-block-end: solid 1px var(--color-link-base);
+
+        svg {
+            --size: var(--font-size-m);
+
+            width: var(--size);
+            height: var(--size);
+            margin-block-start: 2px;
+            color: var(--color-link-base);
+        }
+    }
+
+    @media (hover: hover) {
+        a:hover {
+            padding-block-end: 1px;
+            border-block-end-width: 2px;
+        }
+    }
+
+    a:active {
+        padding-block-end: 1px;
+        border-block-end-width: 2px;
+    }
+</style>

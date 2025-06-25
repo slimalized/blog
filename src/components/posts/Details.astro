@@ -7,7 +7,7 @@ const { summaryValue } = Astro.props as DetailsProps;
 
 <div class="details-container">
     {summaryValue ? <p>{summaryValue}</p> : <slot name="details-header" />}
-    <DetailsContent client:load>
+    <DetailsContent client:visible>
         <slot />
     </DetailsContent>
 </div>

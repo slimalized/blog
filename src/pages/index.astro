@@ -1,8 +1,98 @@
 ---
+import { getCollection } from "astro:content";
+import { Link2 } from "lucide-react";
+import PostList from "../components/PostList.astro";
+import NavLink from "../components/navigation/NavLink.astro";
 import { site } from "../utils/consts";
 import Layout from "./_pages.astro";
+
+const posts = (await getCollection("posts"))
+    .filter((post) => post.data.hide !== true)
+    .slice(0, 3);
+
+const sortedPosts = posts.sort((a, b) => {
+    const aDate = new Date(a.data.publishedDate);
+    const bDate = new Date(b.data.publishedDate);
+    return bDate.getTime() - aDate.getTime();
+});
 ---
 
 <Layout title={site.domain} type="home" description={site.description}>
-    <a href="/posts">posts</a>
+    <h1>slimalized（スライマリゼッド）の個人ブログ。散歩と寿司が大好き。</h1>
+    <p>
+        <span class="social-link">
+            <Link2 />
+            <a
+                href="https://x.com/E6E0DB"
+                target="_blank"
+                rel="noopener noreferrer"
+            >
+                x.com/E6E0DB
+            </a>
+        </span>
+        <span class="social-link">
+            <Link2 />
+            <a
+                href="https://github.com/slimalized"
+                target="_blank"
+                rel="noopener noreferrer"
+            >
+                github.com/slimalized
+            </a>
+        </span>
+    </p>
+    <h2>書いたもの</h2>
+    <PostList posts={sortedPosts} />
+    <NavLink href="/posts" text="書いたものをさらに見る" align="center" />
 </Layout>
+
+<style>
+    h1 {
+        margin-block-start: var(--space-xl);
+        font-family: var(--font-sans-variant);
+        font-size: var(--font-size-l);
+        font-weight: var(--font-weight-medium);
+        line-height: var(--line-height-jp-m);
+        word-break: auto-phrase;
+        text-wrap: pretty;
+        scroll-margin: var(--space-xxxl);
+    }
+
+    h2 {
+        display: -webkit-box;
+        margin-block-start: var(--space-xxl);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        -webkit-line-clamp: 2;
+        font-family: var(--font-sans-variant);
+        font-size: var(--font-size-xxxl);
+        font-weight: var(--font-weight-medium);
+        line-height: var(--line-height-jp-s);
+        -webkit-box-orient: vertical;
+    }
+
+    span.social-link {
+        display: flex;
+        flex-direction: row;
+        column-gap: 8px;
+        align-items: center;
+        margin-block-start: var(--space-xs);
+
+        a {
+            color: var(--color-primary-text-h);
+        }
+
+        svg {
+            --size: var(--font-size-l);
+
+            width: var(--size);
+            height: var(--size);
+            margin-block-start: 6px;
+            rotate: -45deg;
+        }
+    }
+
+    :global(.nav-link) {
+        margin-block-start: var(--space-xl);
+    }
+</style>

@@ -1,0 +1,113 @@
+---
+import sharp from "sharp";
+import { imageSizes } from "../../utils/scripts/mediaConverter";
+
+interface Props {
+    alt: string;
+    src: string;
+    loading?: "lazy" | "eager";
+    linkable?: undefined | false;
+}
+
+const { alt, src: _src, loading = "lazy", linkable = true } = Astro.props;
+
+const extRegex = /\.(avif|svg)$/;
+
+const src = {
+    original: _src,
+    small: _src.replace(extRegex, "_small.$1"),
+    large: _src.replace(extRegex, "_large.$1"),
+};
+
+const res = await fetch(src.original);
+const buffer = Buffer.from(await res.arrayBuffer());
+const metadata = await sharp(buffer).metadata();
+const isSvg = metadata.format === "svg";
+const { width: originalWidth, height: originalHeight } = metadata;
+const isValid = originalWidth !== undefined && originalHeight !== undefined;
+const smallWidth = isValid
+    ? Math.min(imageSizes.small, originalWidth)
+    : undefined;
+const largeWidth = isValid
+    ? Math.min(imageSizes.large, originalWidth)
+    : undefined;
+---
+
+{
+    // failed to load message
+    !isValid && (
+        <p>
+            failed to load <code>{_src}</code>
+        </p>
+    )
+}
+
+{
+    // svg with link
+    isValid && isSvg && linkable && (
+        <a href={_src} target="_blank" rel="noopener noreferrer">
+            <img src={_src} alt={alt} loading="lazy" />
+        </a>
+    )
+}
+
+{
+    // svg without link
+    isValid && isSvg && !linkable && <img src={_src} alt={alt} loading="lazy" />
+}
+
+{
+    // picture with/without link
+    isValid && !isSvg && (
+        <picture>
+            <source
+                media={`(max-width: ${imageSizes.small}px)`}
+                srcset={imageSizes.small >= originalWidth ? _src : src.small}
+                width={smallWidth}
+                height={Math.floor(
+                    ((smallWidth as number) * originalHeight) / originalWidth,
+                )}
+            />
+            {linkable ? (
+                <a href={_src} target="_blank" rel="noopener noreferrer">
+                    <img
+                        src={
+                            imageSizes.large >= originalWidth ? _src : src.large
+                        }
+                        alt={alt}
+                        width={largeWidth}
+                        height={Math.floor(
+                            ((largeWidth as number) * originalHeight) /
+                                originalWidth,
+                        )}
+                        loading={loading}
+                    />
+                </a>
+            ) : (
+                <img
+                    src={imageSizes.large >= originalWidth ? _src : src.large}
+                    alt={alt}
+                    width={largeWidth}
+                    height={Math.floor(
+                        ((largeWidth as number) * originalHeight) /
+                            originalWidth,
+                    )}
+                    loading={loading}
+                />
+            )}
+        </picture>
+    )
+}
+
+<style>
+    img {
+        width: 100%;
+        max-width: 100%;
+        height: auto;
+    }
+
+    a {
+        display: grid;
+        place-items: center;
+    }
+</style>

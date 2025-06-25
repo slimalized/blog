@@ -1,6 +1,8 @@
 ---
 import { getCollection } from "astro:content";
-import { formatDate } from "../../utils/formatDate";
+import PostsOgImagePng from "../../assets/posts-og-image.png";
+import PostList from "../../components/PostList.astro";
+import NavLink from "../../components/navigation/NavLink.astro";
 import Layout from "../_pages.astro";
 
 const posts = (await getCollection("posts")).filter(
@@ -14,21 +16,8 @@ const sortedPosts = posts.sort((a, b) => {
 });
 ---
 
-<Layout title="posts">
-    <h1>ポスト一覧</h1>
-    <ul>
-        {
-            sortedPosts.map((post) => {
-                const date = formatDate(post.data.publishedDate);
-                return (
-                    <li>
-                        <a href={`/posts/${post.id}`}>
-                            <time datetime={date}>{date}</time>
-                            <h2>{post.data.title}</h2>
-                        </a>
-                    </li>
-                );
-            })
-        }
-    </ul>
+<Layout title="書いたもの" ogImageSrc={PostsOgImagePng.src}>
+    <NavLink href="/" text="ホーム" direction="back" />
+    <h1>書いたもの</h1>
+    <PostList posts={sortedPosts} />
 </Layout>

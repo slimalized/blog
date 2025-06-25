@@ -31,7 +31,7 @@ const title = _title ?? langID[lang] ?? lang;
 <figure>
     <figcaption>
         <span data-title={title}>{title}</span>
-        <CopyCodeButton code={code} codeBlockId={id} client:load />
+        <CopyCodeButton code={code} codeBlockId={id} client:visible />
     </figcaption>
     <div>
         <div id={id} aria-hidden="true"></div>
@@ -57,7 +57,7 @@ const title = _title ?? langID[lang] ?? lang;
         display: flex;
         flex-direction: column;
         row-gap: 1rem;
-        margin-block-start: var(--space-m);
+        margin-block: var(--space-l) var(--space-xl);
     }
 
     figcaption {
@@ -67,11 +67,14 @@ const title = _title ?? langID[lang] ?? lang;
         padding-block: 4px;
         padding-inline: 1rem;
         font-family: var(--font-mono);
+        line-height: var(--line-height-jp-s);
         color: var(--color-secondary-text-l);
         border-bottom: solid 1px var(--color-secondary-outline-l);
     }
 
     span:is(figcaption > *) {
+        height: 100%;
+        padding: 4px 0;
         font-size: var(--font-size-s);
 
         &::before {

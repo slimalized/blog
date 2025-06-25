@@ -10,7 +10,7 @@ p:is(:is(h2, h3, h4) + *) {
 }
 
 h1 {
-	margin-block-start: var(--space-xxxl);
+	margin-block-start: var(--space-xl);
 	font-family: var(--font-sans-variant);
 	font-size: var(--font-size-xxxl);
 	font-weight: var(--font-weight-medium);

@@ -1,6 +1,6 @@
-import * as fs from "node:fs/promises";
+import fs from "node:fs/promises";
 import type { AstroIntegration, AstroIntegrationLogger } from "astro";
-import { JSDOM } from "jsdom";
+import { JSDOM, VirtualConsole } from "jsdom";
 import kleur from "kleur";
 import subsetFont from "subset-font";
 import { fileKBSize } from "../utils/fileKBSize";
@@ -57,7 +57,9 @@ const collectTextContentFromHTML = async (
 
 	try {
 		const htmlContent = await fs.readFile(htmlFilePath, "utf-8");
-		const { document } = new JSDOM(htmlContent).window;
+		const virtualConsole = new VirtualConsole();
+		virtualConsole.on("error", () => {}); // Ignore errors from JSDOM.
+		const { document } = new JSDOM(htmlContent, { virtualConsole }).window;
 
 		// 1. Remove unnecessary doms.
 		const ExcludeDoms = (excludeTagNames ?? []).flatMap((tagName) =>
@@ -203,7 +205,7 @@ export const fontOptimizer = (): AstroIntegration => ({
 				return;
 			}
 
-			console.log(kleur.bgGreen(" optimizing fonts ")); // log start
+			console.log(kleur.bgGreen().black(" optimizing fonts ")); // log start
 
 			for (const fontOptimizingOption of fontOptimizingOptions) {
 				const logInfo = await optimizeFonts(
@@ -215,7 +217,9 @@ export const fontOptimizer = (): AstroIntegration => ({
 					const logMessage = [
 						kleur.gray("Optimized"),
 						logInfo.fontPath,
-						kleur.gray(`(${kleur.red(fileKBSize(logInfo.prevFileSize))} kB ->`),
+						kleur.gray(
+							`(${kleur.yellow(fileKBSize(logInfo.prevFileSize))} kB ->`,
+						),
 						kleur.green(fileKBSize(logInfo.optimizedFileSize)),
 						kleur.gray(`kB | ${logInfo.charsLength} chars)`),
 					].join(" ");
