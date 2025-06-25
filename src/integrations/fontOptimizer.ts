@@ -1,6 +1,6 @@
 import fs from "node:fs/promises";
 import type { AstroIntegration, AstroIntegrationLogger } from "astro";
-import { JSDOM } from "jsdom";
+import { JSDOM, VirtualConsole } from "jsdom";
 import kleur from "kleur";
 import subsetFont from "subset-font";
 import { fileKBSize } from "../utils/fileKBSize";
@@ -57,7 +57,9 @@ const collectTextContentFromHTML = async (
 
 	try {
 		const htmlContent = await fs.readFile(htmlFilePath, "utf-8");
-		const { document } = new JSDOM(htmlContent).window;
+		const virtualConsole = new VirtualConsole();
+		virtualConsole.on("error", () => {}); // Ignore errors from JSDOM.
+		const { document } = new JSDOM(htmlContent, { virtualConsole }).window;
 
 		// 1. Remove unnecessary doms.
 		const ExcludeDoms = (excludeTagNames ?? []).flatMap((tagName) =>
