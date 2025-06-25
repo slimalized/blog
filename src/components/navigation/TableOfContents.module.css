@@ -35,7 +35,7 @@ div#table-of-contents-wrapper::after {
 	content: "";
 }
 
-	div#table-of-contents-wrapper::before {
+div#table-of-contents-wrapper::before {
 	top: 0;
 	background-image: var(--top-gradient);
 }
