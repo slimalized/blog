@@ -1,12 +1,12 @@
 ---
-import { CircleAlert } from "lucide-react";
+import { CircleSlash2 } from "lucide-react";
 import NavLink from "../components/navigation/NavLink.astro";
-import Layout from "./_pages.astro";
+import Layout from "../layouts/baseLayout.astro";
 ---
 
 <Layout type="404" title="ページが見つかりませんでした">
     <div>
-        <CircleAlert />
+        <CircleSlash2 />
         <h2>ページが見つかりませんでした</h2>
         <NavLink href="/" text="ホームに戻る" align="center" direction="back" />
     </div>
