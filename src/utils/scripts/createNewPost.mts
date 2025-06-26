@@ -86,8 +86,8 @@ try {
 	echo(await $`cat src/content/posts/${path}.mdx`);
 
 	if (shouldHasImageDirectory) {
-		await $`mkdir src/assets/${path}`;
-		echo(`${kleur.green("✓")} Create images directory to src/assets/${path}`);
+		await $`mkdir media/posts/${path}`;
+		echo(`${kleur.green("✓")} Create images directory to media/posts/${path}`);
 	}
 } catch (error) {
 	// handling ctrl+c
