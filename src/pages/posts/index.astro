@@ -3,7 +3,7 @@ import { getCollection } from "astro:content";
 import PostsOgImagePng from "../../assets/posts-og-image.png";
 import PostList from "../../components/PostList.astro";
 import NavLink from "../../components/navigation/NavLink.astro";
-import Layout from "../_pages.astro";
+import Layout from "../../layouts/baseLayout.astro";
 
 const posts = (await getCollection("posts")).filter(
     (post) => post.data.hide !== true,

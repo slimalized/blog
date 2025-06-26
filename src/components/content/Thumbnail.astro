@@ -1,0 +1,105 @@
+---
+import { Image } from "lucide-react";
+import type { worksTypes } from "../../content.config";
+import { site } from "../../utils/consts";
+import OptimizedImage from "./OptimizedImage.astro";
+
+interface Props {
+    alt?: string;
+    src?: string;
+    type?: (typeof worksTypes)[number];
+}
+
+const { alt = site.author, src, type } = Astro.props;
+
+const isLocal = src?.startsWith("/media/");
+const hasSvg = src?.endsWith(".svg");
+---
+
+<figure class={hasSvg ? `thumbnail has-svg ${type}` : `thumbnail ${type}`}>
+    {
+        !src ? (
+            <Image className="fallback-image" size={48} />
+        ) : isLocal ? (
+            <img src={src} alt={alt} loading="eager" />
+        ) : (
+            <OptimizedImage
+                src={src}
+                alt={alt}
+                loading="eager"
+                linkable={false}
+            />
+        )
+    }
+    {
+        type !== undefined && (
+            <span class={`type-badge ${type}`}>{type.toUpperCase()}</span>
+        )
+    }
+</figure>
+
+<style>
+    :global(.fallback-image) {
+        color: var(--beige-8);
+    }
+
+    figure.thumbnail:has(picture, img, svg) {
+        display: grid;
+        row-gap: var(--space-xs);
+        place-items: center;
+        width: 100%;
+        height: calc(8rem + var(--space-xl) * 2);
+        padding-inline: var(--space-l);
+        overflow: hidden;
+        background-color: var(--color-primary-background-layer-ha);
+        border-radius: var(--border-radius-m);
+
+        &.tech {
+            background-color: var(--blue-2);
+        }
+
+        &.design {
+            background-color: var(--yellow-2);
+        }
+    }
+
+    .type-badge {
+        position: absolute;
+        right: 0;
+        bottom: 0;
+        display: grid;
+        place-items: center;
+        padding: var(--space-s);
+        margin: 8px;
+        font-family: var(--font-mono);
+        font-size: var(--font-size-xs);
+        line-height: 0;
+        text-align: end;
+        letter-spacing: 1px;
+        border-radius: var(--border-radius-pill);
+
+        &.tech {
+            color: var(--blue-11);
+            background-color: var(--blue-4);
+        }
+
+        &.design {
+            color: var(--yellow-11);
+            background-color: var(--yellow-4);
+        }
+    }
+
+    :global(img:is(figure.thumbnail:not(.has-svg) *)) {
+        max-height: 8rem;
+        border: solid min(0.8vw, 4px)
+            light-dark(var(--beige-1), var(--beige-12));
+        border-radius: 0;
+        box-shadow: var(--box-shadow-m);
+    }
+
+    :global(img:is(figure.thumbnail.has-svg *)) {
+        max-width: 4rem;
+        max-height: 8rem;
+        filter: drop-shadow(var(--box-shadow-m));
+    }
+</style>

@@ -2,15 +2,26 @@
 import { getCollection } from "astro:content";
 import { Link2 } from "lucide-react";
 import PostList from "../components/PostList.astro";
+import WorkList from "../components/WorkList.astro";
 import NavLink from "../components/navigation/NavLink.astro";
+import Layout from "../layouts/baseLayout.astro";
 import { site } from "../utils/consts";
-import Layout from "./_pages.astro";
 
 const posts = (await getCollection("posts"))
     .filter((post) => post.data.hide !== true)
     .slice(0, 3);
 
 const sortedPosts = posts.sort((a, b) => {
+    const aDate = new Date(a.data.publishedDate);
+    const bDate = new Date(b.data.publishedDate);
+    return bDate.getTime() - aDate.getTime();
+});
+
+const works = (await getCollection("works"))
+    .filter((work) => work.data.hide !== true)
+    .slice(0, 3);
+
+const sortedWorks = works.sort((a, b) => {
     const aDate = new Date(a.data.publishedDate);
     const bDate = new Date(b.data.publishedDate);
     return bDate.getTime() - aDate.getTime();
@@ -44,6 +55,9 @@ const sortedPosts = posts.sort((a, b) => {
     <h2>書いたもの</h2>
     <PostList posts={sortedPosts} />
     <NavLink href="/posts" text="書いたものをさらに見る" align="center" />
+    <h2>作ったもの</h2>
+    <WorkList works={sortedWorks} />
+    <NavLink href="/works" text="作ったものをさらに見る" align="center" />
 </Layout>
 
 <style>
