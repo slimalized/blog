@@ -11,15 +11,15 @@ const posts = defineCollection({
 	}),
 });
 
-export const worksTypes = ["tech", "design"] as const;
+export const worksCategories = ["tech", "design"] as const;
 
 const works = defineCollection({
 	loader: glob({ pattern: "**/[^_]*.{md,mdx}", base: "./src/content/works" }),
 	schema: z.object({
 		title: z.string(),
 		publishedDate: z.date(),
+		category: z.enum(worksCategories),
 		thumbnail: z.string().optional(),
-		type: z.enum(worksTypes),
 		hide: z.literal(true).optional(),
 	}),
 });

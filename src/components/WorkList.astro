@@ -13,7 +13,7 @@ const { works } = Astro.props;
 <ul>
     {
         works.map((work) => {
-            const { title, publishedDate, thumbnail, type } = work.data;
+            const { title, publishedDate, thumbnail, category } = work.data;
             const year = formatDate(publishedDate).slice(0, 4);
 
             return (
@@ -23,10 +23,10 @@ const { works } = Astro.props;
                             <Thumbnail
                                 src={thumbnail}
                                 alt={title}
-                                type={type}
+                                category={category}
                             />
                         ) : (
-                            <Thumbnail type={type} /> // thumbnail with default image (slimalized icon).
+                            <Thumbnail category={category} /> // thumbnail with default image (slimalized icon).
                         )}
                         <p>
                             <time datetime={year}>{year}</time>

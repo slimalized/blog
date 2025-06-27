@@ -24,10 +24,12 @@ interface Props<T extends CollectionKey> {
 
 const { entry, contentType } = Astro.props as Props<CollectionKey>;
 const { title, publishedDate, hide, thumbnail } = entry.data;
-const { href } = Astro.url;
+const category = "category" in entry.data ? entry.data.category : "";
 const { Content, headings } = await render(entry);
 
 const ogImageSrc = `/${contentType}/${entry.id}/og-image.png`;
+
+const { href } = Astro.url;
 
 const components = {
     h2: Heading,
@@ -63,7 +65,18 @@ const date = dateMap[contentType](publishedDate);
                 text={titleMapping[`/${contentType}`]}
                 direction="back"
             />
-            {thumbnail && <Thumbnail src={thumbnail} alt={title} />}
+            {
+                thumbnail &&
+                    (category ? (
+                        <Thumbnail
+                            src={thumbnail}
+                            alt={title}
+                            category={category}
+                        />
+                    ) : (
+                        <Thumbnail src={thumbnail} alt={title} />
+                    ))
+            }
             <p id="published-date">
                 <time>{date}</time>
             </p>

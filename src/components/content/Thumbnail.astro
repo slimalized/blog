@@ -1,22 +1,25 @@
 ---
 import { Image } from "lucide-react";
-import type { worksTypes } from "../../content.config";
+import type { worksCategories } from "../../content.config";
 import { site } from "../../utils/consts";
 import OptimizedImage from "./OptimizedImage.astro";
 
 interface Props {
     alt?: string;
     src?: string;
-    type?: (typeof worksTypes)[number];
+    category?: (typeof worksCategories)[number];
 }
 
-const { alt = site.author, src, type } = Astro.props;
+const { alt = site.author, src, category } = Astro.props;
 
 const isLocal = src?.startsWith("/media/");
 const hasSvg = src?.endsWith(".svg");
+const isWorks = category !== undefined;
 ---
 
-<figure class={hasSvg ? `thumbnail has-svg ${type}` : `thumbnail ${type}`}>
+<figure
+    class={`${hasSvg && "has-svg"} ${isWorks && "is-works"} thumbnail ${category}`}
+>
     {
         !src ? (
             <Image className="fallback-image" size={48} />
@@ -32,8 +35,10 @@ const hasSvg = src?.endsWith(".svg");
         )
     }
     {
-        type !== undefined && (
-            <span class={`type-badge ${type}`}>{type.toUpperCase()}</span>
+        isWorks && (
+            <span class={`category-badge ${category}`}>
+                {category.toUpperCase()}
+            </span>
         )
     }
 </figure>
@@ -51,19 +56,11 @@ const hasSvg = src?.endsWith(".svg");
         height: calc(8rem + var(--space-xl) * 2);
         padding-inline: var(--space-l);
         overflow: hidden;
-        background-color: var(--color-primary-background-layer-ha);
+        background-color: var(--color-primary-background-layer-h);
         border-radius: var(--border-radius-m);
-
-        &.tech {
-            background-color: var(--blue-2);
-        }
-
-        &.design {
-            background-color: var(--yellow-2);
-        }
     }
 
-    .type-badge {
+    .category-badge {
         position: absolute;
         right: 0;
         bottom: 0;
@@ -89,17 +86,29 @@ const hasSvg = src?.endsWith(".svg");
         }
     }
 
+    :global(:root[data-theme="dark"] img:is(figure.thumbnail *)) {
+        opacity: 0.85;
+    }
+
     :global(img:is(figure.thumbnail:not(.has-svg) *)) {
         max-height: 8rem;
-        border: solid min(0.8vw, 4px)
+        border: solid min(0.8vw, 5px)
             light-dark(var(--beige-1), var(--beige-12));
         border-radius: 0;
         box-shadow: var(--box-shadow-m);
     }
 
+    :global(img:is(figure.thumbnail.is-works:not(.has-svg) *)) {
+        max-height: 8rem;
+        border: none;
+        border-radius: 0;
+        box-shadow: none;
+        filter: drop-shadow(0 2px 3px rgb(0 0 0 / 16%));
+    }
+
     :global(img:is(figure.thumbnail.has-svg *)) {
         max-width: 4rem;
         max-height: 8rem;
-        filter: drop-shadow(var(--box-shadow-m));
+        filter: drop-shadow(0 2px 3px rgb(0 0 0 / 16%));
     }
 </style>
