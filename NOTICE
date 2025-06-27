@@ -1,0 +1,31 @@
+# About Licenses
+
+Program code (such as source code) is released under the MIT License.
+
+Content created by the author, such as text files (.md, .mdx) and images (.avif, .png, .svg, etc.), is released under the CC BY-NC-SA 4.0 license. However, external works included in this repository (such as `public/fonts/*.woff2`) are not the property of the repository author. Please use each work in accordance with the license and terms of use specified by the original distributor or copyright holder.
+
+---
+
+## MIT License
+
+(For the full text of the MIT License, please refer to the `LICENSE` file.)
+
+## CC BY-NC-SA 4.0
+
+https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode
+
+## Font Licenses
+
+- Noto Sans Japanese:
+  Copyright 2014-2021 Adobe (http://www.adobe.com/), with Reserved Font Name 'Source'.
+  This Font Software is licensed under the SIL Open Font License, Version 1.1.
+
+- Zen Kaku Gothic New:
+  Copyright 2022 The Zen Kaku Gothic Project Authors (https://github.com/googlefonts/zen-kakugothic).
+  This Font Software is licensed under the SIL Open Font License, Version 1.1.
+
+- JetBrains Mono:
+  Copyright 2020 The JetBrains Mono Project Authors (https://github.com/JetBrains/JetBrainsMono).
+  This Font Software is licensed under the SIL Open Font License, Version 1.1.
+
+The full text of the SIL Open Font License, Version 1.1, is available at https://openfontlicense.org .

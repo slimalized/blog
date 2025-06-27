@@ -6,15 +6,17 @@ import Breadcrumbs from "./Breadcrumbs.astro";
 ---
 
 <footer>
-    <Breadcrumbs {...Astro.props} />
     <div class="footer-wrapper">
-        <a href="/" class="home-link">
-            <Image src={icon} alt={"slimalized icon"} width={20} height={20} />
-            <h4>slimalized.dev</h4>
-        </a>
-        <p class="about">
-            slimalized（スライマリゼッド）の個人ブログ。散歩と寿司が大好き。<br
-            />
+        <ul>
+            <li><a class="footer-nav-link" href="/"><h4>ホーム</h4></a></li>
+            <li>
+                <a class="footer-nav-link" href="/posts"><h4>書いたもの</h4></a>
+            </li>
+            <li>
+                <a class="footer-nav-link" href="/works"><h4>作ったもの</h4></a>
+            </li>
+        </ul>
+        <p class="legal">
             このサイトの内容は
             <a
                 href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.ja"
@@ -23,7 +25,9 @@ import Breadcrumbs from "./Breadcrumbs.astro";
             >
                 CC BY-NC-SA 4.0
             </a>
-            の下で提供されています。また、 GitHubで
+            の下で提供されています。詳しくは
+            <a href="/posts/legal">規約</a>
+            をご覧ください。また、 GitHubで
             <!-- @TODO: 公開後にソースを置き換え -->
             <a href="/" target="_blank" rel="noopener noreferrer"
                 >サイトのソース</a
@@ -36,54 +40,30 @@ import Breadcrumbs from "./Breadcrumbs.astro";
 <style>
     footer {
         width: 100%;
-        margin-block-start: var(--space-xxl);
+        margin-block-start: calc(var(--space-xxl) * 2);
     }
 
     div.footer-wrapper {
-        display: flex;
-        flex-flow: column wrap;
-        gap: var(--space-s) min(4vw, var(--space-l));
         width: var(--width-footer);
-        padding-block: var(--space-xxl) var(--space-xxxl);
+        padding-block: var(--space-xxl) var(--space-xl);
+        padding-inline: var(--space-xs);
         margin-inline: auto;
-        border-block-start: solid 1px var(--color-primary-outline-l);
+        border-block-start: solid 1px var(--color-primary-outline-h);
     }
 
-    a.home-link {
-        display: inline-flex;
-        column-gap: var(--space-xs);
-        place-items: center;
-        width: max-content;
-        font-family: var(--font-sans);
-        font-size: var(--font-size-l);
-        font-weight: var(--font-weight-medium);
-        color: inherit;
-        text-decoration: none;
-
-        img {
-            --size: 1.25rem;
-
-            width: var(--size);
-            height: var(--size);
-        }
-
-        h4 {
-            font-weight: inherit;
-        }
-
-        span {
-            opacity: 0.5;
-        }
+    a.footer-nav-link {
+        color: var(--color-primary-text-h);
+        text-decoration-color: transparent;
     }
 
     @media (hover: hover) {
-        a:not(.home-link):hover {
-            color: var(--color-primary-text-h);
+        a.footer-nav-link:hover {
+            text-decoration-color: currentcolor;
         }
     }
 
-    p.about {
-        margin-block-start: 0;
+    p.legal {
+        margin-block-start: var(--space-l);
         font-size: var(--font-size-xs);
         color: var(--color-primary-text-l);
         text-align: left;
@@ -93,5 +73,28 @@ import Breadcrumbs from "./Breadcrumbs.astro";
         a {
             color: inherit;
         }
+    }
+
+    ul {
+        display: flex;
+        flex-direction: column;
+        row-gap: var(--space-m);
+        padding-inline-start: 0;
+        margin-block-start: 0;
+    }
+
+    li {
+        width: max-content;
+        list-style: none;
+    }
+
+    h4 {
+        display: flex;
+        font-family: var(--font-sans-variant);
+        font-size: var(--font-size-xl);
+        font-weight: var(--font-weight-medium);
+        line-height: var(--line-height-jp-s);
+        word-break: auto-phrase;
+        text-wrap: pretty;
     }
 </style>
