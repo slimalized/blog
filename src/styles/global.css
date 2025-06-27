@@ -40,15 +40,6 @@
 	font-display: swap;
 }
 
-@font-face {
-	font-family: Oldenburg;
-	font-style: normal;
-	font-weight: 400;
-	src: local("Oldenburg"), url("/fonts/oldenburg_regular_400.woff2")
-		format("woff2");
-	font-display: swap;
-}
-
 @layer reset, base, writing;
 
 @layer base {
