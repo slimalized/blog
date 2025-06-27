@@ -55,7 +55,7 @@ const handleR2Upload = async (dirName: string, shouldUpdate: boolean) => {
 	const { Contents } = await r2Client.send(
 		new ListObjectsV2Command({
 			Bucket: BUCKET_NAME,
-			Prefix: `posts/${dirName}/`,
+			Prefix: `${dirName}/`,
 		}),
 	);
 
@@ -79,7 +79,7 @@ const handleR2Upload = async (dirName: string, shouldUpdate: boolean) => {
 			continue;
 		}
 
-		const key = `posts/${dirName}/${entry.name}`;
+		const key = `${dirName}/${entry.name}`;
 		const url = `https://${site.r2SubDomain}/${key}`;
 		if (existingKeys.has(key) && !shouldUpdate) {
 			console.log(
@@ -125,9 +125,11 @@ const main = async () => {
 
 	const args = process.argv.slice(2);
 	const dirName = args[0];
-	const shouldUpdate = args.includes("--update");
+	const shouldUpdate = args.includes("--update-all");
 	if (!dirName) {
-		console.error("Usage: bun run r2Uploader.ts <directory> [--update]");
+		console.error(
+			"Usage: bun run r2Uploader.ts {posts|works}/{id} [--update-all]",
+		);
 		process.exit(1);
 	}
 	await handleR2Upload(dirName, shouldUpdate);

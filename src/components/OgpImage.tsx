@@ -2,7 +2,6 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import satori from "satori";
 import sharp from "sharp";
-import { formatDate } from "../utils/formatDate";
 
 const getFont = async (fontName: string, weight: string) => {
 	const response = await fetch(
@@ -23,7 +22,7 @@ const getFont = async (fontName: string, weight: string) => {
 	return await fontResponse.arrayBuffer();
 };
 
-export const generateOgpImage = async (title: string, date: Date) => {
+export const generateOgpImage = async (title: string, date: string) => {
 	const bgPath = path.resolve(process.cwd(), "src/assets/og-image-bg.png");
 	const bgBuffer = await fs.readFile(bgPath);
 	const bgSrc = `data:image/png;base64,${bgBuffer.toString("base64")}`;
@@ -77,7 +76,7 @@ export const generateOgpImage = async (title: string, date: Date) => {
 					color: "#827a6b",
 				}}
 			>
-				{formatDate(date)}
+				{date}
 			</p>
 			<div
 				style={{

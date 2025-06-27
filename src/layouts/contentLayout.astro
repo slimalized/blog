@@ -1,0 +1,190 @@
+---
+import { type CollectionEntry, render } from "astro:content";
+import type { CollectionKey } from "astro:content";
+import Share from "../components/Share.astro";
+import {
+    Blockquote,
+    CodeBlock,
+    Details,
+    Heading,
+    ImageFigure,
+    Link,
+    Thumbnail,
+} from "../components/content/index.astro";
+import NavLink from "../components/navigation/NavLink.astro";
+import { TableOfContents } from "../components/navigation/TableOfContents";
+import { site, titleMapping } from "../utils/consts";
+import { formatDate } from "../utils/formatDate";
+import Layout from "./baseLayout.astro";
+
+interface Props<T extends CollectionKey> {
+    entry: CollectionEntry<T>;
+    contentType: T;
+}
+
+const { entry, contentType } = Astro.props as Props<CollectionKey>;
+const { title, publishedDate, hide, thumbnail } = entry.data;
+const category = "category" in entry.data ? entry.data.category : "";
+const { Content, headings } = await render(entry);
+
+const ogImageSrc = `/${contentType}/${entry.id}/og-image.png`;
+
+const { href } = Astro.url;
+
+const components = {
+    h2: Heading,
+    h3: Heading,
+    h4: Heading,
+    pre: CodeBlock,
+    a: Link,
+    blockquote: Blockquote,
+    details: Details,
+    img: ImageFigure,
+};
+
+const dateMap = {
+    posts: (date: Date) => formatDate(date), // yyyy/mm/dd
+    works: (date: Date) => formatDate(date).slice(0, 4), // yyyy
+};
+
+const date = dateMap[contentType](publishedDate);
+---
+
+<Layout title={title} type="article" ogImageSrc={ogImageSrc}>
+    {
+        headings.length > 0 && (
+            <nav id="side-menu">
+                <TableOfContents headings={headings} client:visible />
+            </nav>
+        )
+    }
+    <article>
+        <header>
+            <NavLink
+                href={`/${contentType}`}
+                text={titleMapping[`/${contentType}`]}
+                direction="back"
+            />
+            {
+                thumbnail &&
+                    (category ? (
+                        <Thumbnail
+                            src={thumbnail}
+                            alt={title}
+                            category={category}
+                        />
+                    ) : (
+                        <Thumbnail src={thumbnail} alt={title} />
+                    ))
+            }
+            <p id="published-date">
+                <time>{date}</time>
+            </p>
+            <h1 id="title">{title}</h1>
+        </header>
+        <Content components={components} />
+        <section id="colophon">
+            <h4>{title}</h4>
+            <span>{site.author}, {date}</span>
+        </section>
+        {!hide && <Share title={title} href={href} />}
+    </article>
+</Layout>
+
+<style>
+    :global(main:has(nav#side-menu, article)) {
+        display: grid;
+        width: max-content;
+        min-height: max-content;
+        margin-inline: auto;
+    }
+
+    nav#side-menu {
+        --width-toc: 280px;
+
+        position: sticky;
+        top: calc((100vh - var(--toc-max-height)) / 2);
+        display: block;
+        grid-area: toc;
+        width: var(--width-toc);
+        height: max-content;
+        margin-inline: auto;
+        transition: opacity 100ms;
+    }
+
+    @media (width > 1536px) {
+        :global(main:has(nav#side-menu, article)) {
+            grid-template-areas: "toc article 0";
+            grid-template-columns: 1fr var(--width-article) 1fr;
+            column-gap: 2rem;
+        }
+    }
+
+    @media (1152px < width <= 1536px) {
+        :global(main:has(nav#side-menu, article)) {
+            grid-template-areas: "toc article .";
+            grid-template-columns: 1fr var(--width-article) 0;
+            column-gap: 2rem;
+        }
+    }
+
+    @media (width <= 1152px) {
+        :global(main:has(nav#side-menu, article)) {
+            grid-template-areas: ". article .";
+            grid-template-columns: 0 var(--width-article) 0;
+            column-gap: 0;
+        }
+
+        nav#side-menu {
+            display: none;
+        }
+    }
+
+    article {
+        grid-area: article;
+        width: var(--width-article);
+    }
+
+    :global(header + *) {
+        margin-block-start: var(--space-xxl);
+    }
+
+    :global(header > p:nth-child(2)),
+    :global(figure.thumbnail) {
+        margin-block-start: var(--space-xl);
+    }
+
+    h1#title {
+        margin-block-start: var(--space-xs);
+    }
+
+    p#published-date {
+        margin-block-start: var(--space-l);
+
+        time {
+            color: var(--color-primary-text-l);
+        }
+    }
+
+    section#colophon {
+        display: flex;
+        flex-direction: column;
+        align-items: end;
+        margin-block-start: var(--space-xxl);
+
+        h4 {
+            font-family: var(--font-sans-variant);
+            font-size: var(--font-size-s);
+            font-weight: var(--font-weight-medium);
+            line-height: var(--line-height-jp-s);
+            color: var(--color-primary-text-ha);
+            word-break: auto-phrase;
+            text-wrap: pretty;
+        }
+
+        span {
+            font-size: var(--font-size-xs);
+            color: var(--color-primary-text-la);
+        }
+    }
+</style>

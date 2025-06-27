@@ -161,9 +161,11 @@ const handleConversion = async (
 const main = async () => {
 	const args = process.argv.slice(2);
 	const dirName = args[0];
-	const shouldDeleteOriginal = args.includes("--delete");
+	const shouldDeleteOriginal = args.includes("--delete-original");
 	if (!dirName) {
-		console.error("Usage: bun run mediaConverter.ts <directory> [--delete]");
+		console.error(
+			"Usage: bun run mediaConverter.ts {posts|works}/{id} [--delete-original]",
+		);
 		process.exit(1);
 	}
 	await handleConversion(dirName, shouldDeleteOriginal);

@@ -4,14 +4,14 @@ import { generateOgpImage } from "../../../components/OgpImage";
 import { formatDate } from "../../../utils/formatDate";
 
 export const getStaticPaths = async () => {
-	const posts = await getCollection("posts");
-	return posts.map((post) => ({
+	const works = await getCollection("works");
+	return works.map((work) => ({
 		params: {
-			id: post.id,
+			id: work.id,
 		},
 		props: {
-			title: post.data.title,
-			date: post.data.publishedDate,
+			title: work.data.title,
+			date: work.data.publishedDate,
 		},
 	}));
 };
@@ -25,7 +25,10 @@ export const GET: APIRoute = async ({ params, props }) => {
 			{ status: 400 },
 		);
 	}
-	const body = await generateOgpImage(props.title, formatDate(props.date));
+	const body = await generateOgpImage(
+		props.title,
+		formatDate(props.date).slice(0, 4),
+	);
 
 	return new Response(body, {
 		headers: {

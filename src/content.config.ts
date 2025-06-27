@@ -6,9 +6,22 @@ const posts = defineCollection({
 	schema: z.object({
 		title: z.string(),
 		publishedDate: z.date(),
-		hide: z.literal(true).optional(),
 		thumbnail: z.string().optional(),
+		hide: z.literal(true).optional(),
 	}),
 });
 
-export const collections = { posts };
+export const worksCategories = ["tech", "design"] as const;
+
+const works = defineCollection({
+	loader: glob({ pattern: "**/[^_]*.{md,mdx}", base: "./src/content/works" }),
+	schema: z.object({
+		title: z.string(),
+		publishedDate: z.date(),
+		category: z.enum(worksCategories),
+		thumbnail: z.string().optional(),
+		hide: z.literal(true).optional(),
+	}),
+});
+
+export const collections = { posts, works };

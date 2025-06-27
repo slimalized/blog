@@ -1,7 +1,7 @@
 ---
 import { Image } from "astro:assets";
 import icon from "../../assets/favicon.svg";
-import type { Props } from "../../pages/_pages.astro";
+import type { Props } from "../../layouts/baseLayout.astro";
 import Breadcrumbs from "./Breadcrumbs.astro";
 ---
 
@@ -54,7 +54,7 @@ import Breadcrumbs from "./Breadcrumbs.astro";
         column-gap: var(--space-xs);
         place-items: center;
         width: max-content;
-        font-family: Oldenburg, serif;
+        font-family: var(--font-sans);
         font-size: var(--font-size-l);
         font-weight: var(--font-weight-medium);
         color: inherit;

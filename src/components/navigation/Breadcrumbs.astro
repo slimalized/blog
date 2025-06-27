@@ -1,5 +1,6 @@
 ---
-import type { Props } from "../../pages/_pages.astro";
+import type { Props } from "../../layouts/baseLayout.astro";
+import { titleMapping } from "../../utils/consts";
 
 interface Breadcrumb {
     href: string;
@@ -12,19 +13,13 @@ const { title: contentTitle, type } = Astro.props as Pick<
     "title" | "type"
 >;
 
-const footerTitleMapping = {
-    "/": "ホーム",
-    "/posts": "書いたもの",
-    "/works": "作ったもの",
-};
-
 const pathSegments = _pathname.split("/").filter(Boolean);
 const breadcrumbs: Breadcrumb[] = [];
 
 // Add route.
 breadcrumbs.push({
     href: origin,
-    title: footerTitleMapping["/"],
+    title: titleMapping["/"],
 });
 
 // Add breadcrumb per segment.
@@ -37,9 +32,8 @@ for (const [i, segment] of pathSegments.entries()) {
         href,
         title: isLast
             ? (contentTitle ?? segment)
-            : (footerTitleMapping[
-                  currentPath as keyof typeof footerTitleMapping
-              ] ?? segment),
+            : (titleMapping[currentPath as keyof typeof titleMapping] ??
+              segment),
     });
 }
 ---

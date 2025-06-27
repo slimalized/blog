@@ -4,28 +4,32 @@ import { formatDate } from "../utils/formatDate";
 import Thumbnail from "./content/Thumbnail.astro";
 
 interface Props {
-    posts: CollectionEntry<"posts">[];
+    works: CollectionEntry<"works">[];
 }
 
-const { posts } = Astro.props;
+const { works } = Astro.props;
 ---
 
 <ul>
     {
-        posts.map((post) => {
-            const { title, publishedDate, thumbnail } = post.data;
-            const date = formatDate(publishedDate);
+        works.map((work) => {
+            const { title, publishedDate, thumbnail, category } = work.data;
+            const year = formatDate(publishedDate).slice(0, 4);
 
             return (
                 <li>
-                    <a href={`/posts/${post.id}`}>
+                    <a href={`/works/${work.id}`}>
                         {thumbnail ? (
-                            <Thumbnail src={thumbnail} alt={title} />
+                            <Thumbnail
+                                src={thumbnail}
+                                alt={title}
+                                category={category}
+                            />
                         ) : (
-                            <Thumbnail /> // thumbnail with default image (slimalized icon).
+                            <Thumbnail category={category} /> // thumbnail with default image (slimalized icon).
                         )}
                         <p>
-                            <time datetime={date}>{date}</time>
+                            <time datetime={year}>{year}</time>
                         </p>
                         <h2>{title}</h2>
                     </a>

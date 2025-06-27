@@ -3,14 +3,14 @@ import { getCollection } from "astro:content";
 import Layout from "../../../layouts/contentLayout.astro";
 
 export async function getStaticPaths() {
-    const posts = await getCollection("posts");
-    return posts.map((post) => ({
-        params: { id: post.id },
-        props: { entry: post },
+    const works = await getCollection("works");
+    return works.map((work) => ({
+        params: { id: work.id },
+        props: { entry: work },
     }));
 }
 
 const { entry } = Astro.props;
 ---
 
-<Layout entry={entry} contentType="posts" />
+<Layout entry={entry} contentType="works" />

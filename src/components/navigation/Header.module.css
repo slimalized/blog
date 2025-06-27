@@ -53,9 +53,8 @@ a#home-link {
 	display: flex;
 	place-items: center;
 	padding-inline: var(--space-s) var(--space-m);
-	font-family: Oldenburg, serif;
+	font-family: var(--font-sans);
 	font-size: var(--font-size-l);
 	color: inherit;
 	text-decoration: none;
-	text-shadow: var(--box-shadow-m);
 }

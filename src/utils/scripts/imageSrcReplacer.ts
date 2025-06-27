@@ -3,14 +3,16 @@ import path from "node:path";
 import kleur from "kleur";
 import { site } from "../consts";
 
-// Matches `![<caption>](/media/<directory>/<file>)` with optional whitespace at the start and end
+// Matches `![<caption>](/media/<posts|works>/<id>/<file>)` or `![](/media/<posts|works>/<id>/<file>)` with optional whitespace at the start and end
 const markdownImageSourceRegex =
-	/^\s*!\[(?<caption>[^\]]*)\]\(\/media\/(?<directory>[^)/\s]+)\/(?<file>[^)/\s]+)\)\s*$/im;
+	/^\s*!\[(?<caption>[^\]]*)\]\(\/media\/(?<contentType>[^)\/\s]+)\/(?<id>[^)\/\s]+)\/(?<file>[^)\/\s]+)\)\s*$/i;
 
 const main = async () => {
-	const mdxFileName = process.argv[2];
-	if (!mdxFileName) {
-		console.error("Usage: bun run imageSrcReplacer.ts <mdx-file>");
+	const [contentType, mdxFileName] = process.argv[2].split("/");
+	if (!contentType || !mdxFileName) {
+		console.error(
+			"Usage: bun run imageSrcReplacer.ts {posts|works}/{mdx file} ",
+		);
 		process.exit(1);
 	}
 	if (!mdxFileName.endsWith(".mdx")) {
@@ -20,11 +22,12 @@ const main = async () => {
 
 	const mdxFilePath = path.resolve(
 		__dirname,
-		"../../content/posts/",
+		"../../content/",
+		contentType,
 		mdxFileName,
 	);
 	if (!mdxFilePath) {
-		console.error(`MDX file path not found for ${mdxFileName}.`);
+		console.error(`MDX file path not found for ${contentType}/${mdxFileName}.`);
 		process.exit(1);
 	}
 
@@ -37,23 +40,24 @@ const main = async () => {
 	}
 
 	console.log(
-		`\nReplacing image sources in ${kleur.cyan(`posts/${mdxFileName}`)}`,
+		`\nReplacing image sources in ${kleur.cyan(`${contentType}/${mdxFileName}`)}`,
 	);
 
 	const logLines: string[] = [];
 
 	const lines = content.split(/\n/).map((line, index) => {
-		const { caption, directory, file } =
-			markdownImageSourceRegex.exec(line)?.groups || {};
-		if (caption && directory && file) {
-			const imageUrl = `https://${site.r2SubDomain}/posts/${directory}/${file}`;
+		const match = markdownImageSourceRegex.exec(line);
+		const { caption, contentType, id, file } = match?.groups || {};
+		if (contentType && id && file) {
+			const safeCaption = caption ?? "";
+			const imageUrl = `https://${site.r2SubDomain}/${contentType}/${id}/${file}`;
 			logLines.push(
 				[
 					kleur.green("✓ "),
 					kleur.gray(`Replaced image source in line ${index + 1}:\n`),
 					kleur.gray("|"),
-					` ![${caption}](`,
-					kleur.yellow(`/media/${directory}/${file}`),
+					` ![${safeCaption}](`,
+					kleur.yellow(`/media/${contentType}/${id}/${file}`),
 					kleur.gray(" -> "),
 					kleur.green(imageUrl),
 					")",
@@ -61,7 +65,7 @@ const main = async () => {
 			);
 			return line.replace(
 				markdownImageSourceRegex,
-				`![${caption}](${imageUrl})`,
+				`![${safeCaption}](${imageUrl})`,
 			);
 		}
 		return line;

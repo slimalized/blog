@@ -23,7 +23,7 @@ const getTweetShareUrl = (href: string, title: string) => {
             target="_blank"
             rel="noopener noreferrer"
         >
-            Xで記事をシェアする
+            Xでシェアする
             <ArrowUpRight />
         </a>
     </span>
@@ -34,11 +34,11 @@ const getTweetShareUrl = (href: string, title: string) => {
     section {
         display: flex;
         flex-direction: column;
-        row-gap: var(--space-m);
+        row-gap: var(--space-s);
         align-items: flex-end;
         width: 100%;
-        padding-block-start: var(--space-l);
-        margin-block-start: var(--space-xxl);
+        padding-block-start: var(--space-m);
+        margin-block-start: calc(var(--space-m) + 0.8rem);
         margin-inline-start: auto;
         border-block-start: dashed 1px var(--color-primary-outline-l);
     }
@@ -58,13 +58,12 @@ const getTweetShareUrl = (href: string, title: string) => {
         a {
             display: flex;
             flex-direction: row;
-            column-gap: 4px;
+            column-gap: 8px;
             align-items: center;
-            padding: var(--space-s) var(--space-m) var(--space-s) var(--space-l);
+            padding: 0.8rem 1rem 0.8rem 1.4rem;
             font-size: var(--font-size-m);
             line-height: var(--line-height-none);
             text-decoration: none;
-            background-color: var(--blue-3);
             border-radius: var(--border-radius-pill);
 
             svg {

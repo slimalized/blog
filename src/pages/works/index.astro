@@ -1,23 +1,23 @@
 ---
 import { getCollection } from "astro:content";
-import PostsOgImagePng from "../../assets/posts-og-image.png";
-import PostList from "../../components/PostList.astro";
+import WorksOgImagePng from "../../assets/works-og-image.png";
+import WorkList from "../../components/WorkList.astro";
 import NavLink from "../../components/navigation/NavLink.astro";
 import Layout from "../../layouts/baseLayout.astro";
 
-const posts = (await getCollection("posts")).filter(
-    (post) => post.data.hide !== true,
+const works = (await getCollection("works")).filter(
+    (work) => work.data.hide !== true,
 );
 
-const sortedPosts = posts.sort((a, b) => {
+const sortedWorks = works.sort((a, b) => {
     const aDate = new Date(a.data.publishedDate);
     const bDate = new Date(b.data.publishedDate);
     return bDate.getTime() - aDate.getTime();
 });
 ---
 
-<Layout title="書いたもの" ogImageSrc={PostsOgImagePng.src}>
+<Layout title="作ったもの" ogImageSrc={WorksOgImagePng.src}>
     <NavLink href="/" text="ホーム" direction="back" />
-    <h1>書いたもの</h1>
-    <PostList posts={sortedPosts} />
+    <h1>作ったもの</h1>
+    <WorkList works={sortedWorks} />
 </Layout>
