@@ -11,7 +11,10 @@ import { fontOptimizer } from "./src/integrations/fontOptimizer";
 
 // https://astro.build/config
 export default defineConfig({
-	site: "https://slimalized.dev",
+	site:
+		process.env.NODE_ENV === "development"
+			? "http://localhost:4321"
+			: "https://slimalized.dev",
 	integrations: [mdx(), react(), fontOptimizer()],
 	markdown: {
 		// "details" changes the structure of the tree, so call it first.

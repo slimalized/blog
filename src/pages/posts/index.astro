@@ -1,5 +1,6 @@
 ---
 import { getCollection } from "astro:content";
+import { Rss } from "lucide-react";
 import PostsOgImagePng from "../../assets/posts-og-image.png";
 import PostList from "../../components/PostList.astro";
 import NavLink from "../../components/navigation/NavLink.astro";
@@ -19,5 +20,31 @@ const sortedPosts = posts.sort((a, b) => {
 <Layout title="書いたもの" ogImageSrc={PostsOgImagePng.src}>
     <NavLink href="/" text="ホーム" direction="back" />
     <h1>書いたもの</h1>
+    <span>
+        <Rss />
+        <a class="rss-link" href="/posts/feed.xml">RSS フィード</a>
+    </span>
     <PostList posts={sortedPosts} />
 </Layout>
+
+<style>
+    span {
+        display: flex;
+        flex-direction: row;
+        column-gap: 8px;
+        align-items: center;
+        margin-block-start: var(--space-m);
+
+        a {
+            color: var(--color-primary-text-l);
+        }
+
+        svg {
+            --size: var(--font-size-m);
+
+            width: var(--size);
+            height: var(--size);
+            margin-block-start: 6px;
+        }
+    }
+</style>
