@@ -87,7 +87,6 @@
 
 	body {
 		width: 100cqw;
-		padding-block-start: var(--space-l);
 		font-family: var(--font-sans);
 		font-style: normal;
 		font-weight: 400;
