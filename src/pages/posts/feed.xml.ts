@@ -18,8 +18,7 @@ export const GET: APIRoute = async (context) => {
 	return rss({
 		trailingSlash: false,
 		title: "書いたもの / RSS フィード",
-		description:
-			"slimalizedが書いたもののRSSフィードです。このページのURLをRSSリーダーに登録できます。",
+		description: "slimalizedが書いたもののRSSフィードです。",
 		site: context.site,
 		items: publicPosts.map((post) => ({
 			title: post.data.title,
