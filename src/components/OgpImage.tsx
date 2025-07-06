@@ -39,9 +39,8 @@ export const generateOgpImage = async (title: string, date: string) => {
 				display: "flex",
 				flexDirection: "column",
 				backgroundColor: "#fff",
-				fontSize: 48,
-				fontWeight: 500,
 				color: "#413a2d",
+				fontWeight: 500,
 			}}
 		>
 			<img
@@ -56,43 +55,21 @@ export const generateOgpImage = async (title: string, date: string) => {
 					height: "100%",
 				}}
 			/>
-			<p
-				style={{
-					lineHeight: 1.2,
-					fontSize: 56,
-					padding: "32px 64px 0 56px",
-					width: "100%",
-					textWrap: "balance",
-				}}
-			>
-				{title}
-			</p>
-			<p
-				style={{
-					lineHeight: 1.5,
-					paddingLeft: 56,
-					fontSize: 40,
-					marginTop: -16,
-					color: "#827a6b",
-				}}
-			>
-				{date}
-			</p>
 			<div
 				style={{
-					position: "absolute",
-					bottom: 8,
-					right: 48,
+					width: 260,
 					display: "flex",
 					alignItems: "center",
 					justifyContent: "center",
-					gap: 16,
+					gap: 8,
+					marginTop: 40,
+					marginLeft: 56,
 				}}
 			>
 				<p
 					style={{
-						lineHeight: 1.5,
 						fontSize: 32,
+						lineHeight: 1.5,
 					}}
 				>
 					slimalized.dev
@@ -104,13 +81,33 @@ export const generateOgpImage = async (title: string, date: string) => {
 					height={48}
 					style={{
 						padding: 8,
-						width: "48px",
-						height: "48px",
+						width: 48,
+						height: 48,
 						borderRadius: "50%",
-						backgroundColor: "rgb(253, 247, 236, 0.4)",
+						backgroundColor: "rgb(253, 247, 236, 0.6)",
 					}}
 				/>
 			</div>
+			<p
+				style={{
+					fontSize: 56,
+					lineHeight: 1.2,
+					textWrap: "balance",
+					marginLeft: 56,
+				}}
+			>
+				{title}
+			</p>
+			<p
+				style={{
+					fontSize: 40,
+					lineHeight: 1.5,
+					color: "#827a6b",
+					marginLeft: 56,
+				}}
+			>
+				{date}
+			</p>
 		</div>,
 		{
 			width: 1200,
