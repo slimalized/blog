@@ -11,16 +11,16 @@ interface Props {
 const { href, text, align = "left", direction = "go" } = Astro.props;
 ---
 
-<div class=`nav-link ${align}`>
+<div class=`nav-link-wrapper ${align}`>
     <a href={href}>
         {direction === "back" && <ArrowLeft />}
-        {text}
+        <span>{text}</span>
         {direction === "go" && <ArrowRight />}
     </a>
 </div>
 
 <style>
-    div.nav-link {
+    div.nav-link-wrapper {
         display: flex;
         width: 100%;
 
