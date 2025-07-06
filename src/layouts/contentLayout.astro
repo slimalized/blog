@@ -50,7 +50,7 @@ const dateMap = {
 const date = dateMap[contentType](publishedDate);
 ---
 
-<Layout title={title} type="article" ogImageSrc={ogImageSrc}>
+<Layout title={title} type="article" ogImageSrc={ogImageSrc} isNoIndex={hide}>
     {
         headings.length > 0 && (
             <nav id="side-menu">
