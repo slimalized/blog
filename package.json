@@ -5,7 +5,7 @@
 	"scripts": {
 		"dev": "astro dev",
 		"build": "astro build",
-		"preview": "astro preview",
+		"preview": "wrangler dev",
 		"astro": "astro",
 		"biome": "biome check --write",
 		"biome:format": "biome format --write",
