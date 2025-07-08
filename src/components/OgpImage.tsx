@@ -3,23 +3,15 @@ import path from "node:path";
 import satori from "satori";
 import sharp from "sharp";
 
-const getFont = async (fontName: string, weight: string) => {
-	const response = await fetch(
-		`https://www.googleapis.com/webfonts/v1/webfonts?family=${encodeURIComponent(fontName)}&key=${import.meta.env.GOOGLE_DEVELOPER_API_KEY}`,
-	);
-	if (!response.ok) {
-		throw new Error("Failed to fetch fonts from Google API.");
+const getFont = async (
+	fontFilePath = "src/assets/zen-kaku-gothic-new_medium_500.ttf",
+) => {
+	try {
+		return await fs.readFile(path.resolve(process.cwd(), fontFilePath));
+	} catch (error) {
+		console.error("Error reading font file:", error);
+		throw new Error("Failed to load font.");
 	}
-	const data = await response.json();
-	const fontUrl = data.items[0].files[weight];
-	if (!fontUrl) {
-		throw new Error(`Font ${fontName} with weight ${weight} not found.`);
-	}
-	const fontResponse = await fetch(fontUrl);
-	if (!fontResponse.ok) {
-		throw new Error(`Failed to fetch font ${fontName} with weight ${weight}.`);
-	}
-	return await fontResponse.arrayBuffer();
 };
 
 export const generateOgpImage = async (title: string, date: string) => {
@@ -115,7 +107,7 @@ export const generateOgpImage = async (title: string, date: string) => {
 			fonts: [
 				{
 					name: "Zen Kaku Gothic New",
-					data: await getFont("Zen Kaku Gothic New", "500"),
+					data: await getFont(),
 					style: "normal",
 					weight: 500,
 				},
