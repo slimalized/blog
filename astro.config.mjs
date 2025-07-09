@@ -25,5 +25,9 @@ export default defineConfig({
 				dark: "github-dark",
 			},
 		},
+		remarkRehype: {
+			clobberPrefix: "",
+			footnoteLabel: "脚注",
+		},
 	},
 });

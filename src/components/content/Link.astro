@@ -32,7 +32,7 @@ const isFootnoteRef = !isLinkCard && href.startsWith("#") && id !== undefined;
     // footnote ref
     isFootnoteRef && (
         <a id={id} class="footnote" href={href}>
-            <slot />
+            [<slot />]
         </a>
     )
 }
