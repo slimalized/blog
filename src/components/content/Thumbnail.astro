@@ -91,7 +91,12 @@ const isWorks = category !== undefined;
     }
 
     :global(img:is(figure.thumbnail:not(.has-svg) *)) {
+        width: auto;
+        max-width: 100%;
+        height: auto;
         max-height: 8rem;
+        aspect-ratio: auto;
+        object-fit: contain;
         border: solid min(0.8vw, 5px)
             light-dark(var(--beige-1), var(--beige-12));
         border-radius: 0;
