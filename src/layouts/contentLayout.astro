@@ -27,6 +27,11 @@ const { title, publishedDate, hide, thumbnail } = entry.data;
 const category = "category" in entry.data ? entry.data.category : "";
 const { Content, headings } = await render(entry);
 
+// Change the slug of the last heading to "脚注"
+if (headings.length > 0) {
+    headings[headings.length - 1].slug = "脚注";
+}
+
 const ogImageSrc = `/${contentType}/${entry.id}/og-image.png`;
 
 const { href } = Astro.url;

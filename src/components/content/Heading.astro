@@ -11,7 +11,7 @@ const {
 } = Astro.props as HeadingProps;
 
 const isFootnoteHeading = _class === "sr-only";
-const id = isFootnoteHeading ? "footnote-label" : _id;
+const id = isFootnoteHeading ? "脚注" : _id;
 const H = `h${depth}`;
 const pageUrl = Astro.url.href.replace(/(?<!^)\/$/, ""); // Remove trailing slash from the URL
 ---
