@@ -53,3 +53,9 @@ code:is(:not(pre > *)) {
 	border: solid 1px var(--color-primary-outline-l);
 	border-radius: var(--border-radius-s);
 }
+
+video {
+	margin-block-start: var(--space-l);
+	border: solid 1px var(--color-secondary-outline-la);
+	box-shadow: var(--box-shadow-s);
+}
