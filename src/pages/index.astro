@@ -7,25 +7,28 @@ import NavLink from "../components/navigation/NavLink.astro";
 import Layout from "../layouts/baseLayout.astro";
 import { site } from "../utils/consts";
 
-const posts = (await getCollection("posts"))
-    .filter((post) => post.data.hide !== true)
+const posts = (await getCollection("posts")).filter(
+    (post) => post.data.hide !== true,
+);
+const sortedPosts = posts
+    .sort((a, b) => {
+        const aDate = new Date(a.data.publishedDate);
+        const bDate = new Date(b.data.publishedDate);
+        return bDate.getTime() - aDate.getTime();
+    })
     .slice(0, 3);
 
-const sortedPosts = posts.sort((a, b) => {
-    const aDate = new Date(a.data.publishedDate);
-    const bDate = new Date(b.data.publishedDate);
-    return bDate.getTime() - aDate.getTime();
-});
+const works = (await getCollection("works")).filter(
+    (work) => work.data.hide !== true,
+);
 
-const works = (await getCollection("works"))
-    .filter((work) => work.data.hide !== true)
+const sortedWorks = works
+    .sort((a, b) => {
+        const aDate = new Date(a.data.publishedDate);
+        const bDate = new Date(b.data.publishedDate);
+        return bDate.getTime() - aDate.getTime();
+    })
     .slice(0, 3);
-
-const sortedWorks = works.sort((a, b) => {
-    const aDate = new Date(a.data.publishedDate);
-    const bDate = new Date(b.data.publishedDate);
-    return bDate.getTime() - aDate.getTime();
-});
 ---
 
 <Layout title={site.domain} type="home" description={site.description}>
