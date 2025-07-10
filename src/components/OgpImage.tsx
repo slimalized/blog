@@ -84,7 +84,7 @@ export const generateOgpImage = async (title: string, date: string) => {
 				style={{
 					fontSize: 56,
 					lineHeight: 1.2,
-					textWrap: "balance",
+					width: 1088,
 					marginLeft: 56,
 				}}
 			>
