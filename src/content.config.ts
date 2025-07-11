@@ -8,6 +8,7 @@ const posts = defineCollection({
 		publishedDate: z.date(),
 		thumbnail: z.string().optional(),
 		hide: z.literal(true).optional(),
+		isNovel: z.literal(true).optional(),
 	}),
 });
 
