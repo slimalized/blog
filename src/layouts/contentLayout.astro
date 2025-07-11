@@ -25,6 +25,7 @@ interface Props<T extends CollectionKey> {
 const { entry, contentType } = Astro.props as Props<CollectionKey>;
 const { title, publishedDate, hide, thumbnail } = entry.data;
 const category = "category" in entry.data ? entry.data.category : "";
+const isNovel = "isNovel" in entry.data ? entry.data.isNovel : "";
 const { Content, headings } = await render(entry);
 
 // Change the slug of the last heading to "脚注"
@@ -63,7 +64,7 @@ const date = dateMap[contentType](publishedDate);
             </nav>
         )
     }
-    <article>
+    <article class={isNovel ? "novel-content" : ""}>
         <header>
             <NavLink
                 href={`/${contentType}`}
@@ -169,6 +170,12 @@ const date = dateMap[contentType](publishedDate);
         time {
             color: var(--color-primary-text-l);
         }
+    }
+
+    article.novel-content :global(> p) {
+        margin-block-start: 0;
+        font-size: 16.8px;
+        line-height: var(--line-height-jp-l);
     }
 
     section#colophon {
