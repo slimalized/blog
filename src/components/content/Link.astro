@@ -8,6 +8,42 @@ const { type, href, id, title, hostname, description, faviconUrlString } =
 const isLinkCard = type === "linkCard";
 const isFootnoteLink = !isLinkCard && href.startsWith("#") && id === undefined;
 const isFootnoteRef = !isLinkCard && href.startsWith("#") && id !== undefined;
+
+let canLoadImage = false;
+
+// If the image cannot be fetched due to same-origin policy or other reasons, use <Earth /> instead
+if (isLinkCard && faviconUrlString) {
+    canLoadImage =
+        (await (async () => {
+            try {
+                const response = await fetch(faviconUrlString);
+
+                if (!response.ok) return;
+                const { headers } = response;
+
+                const crossOriginOpenerPolicy = headers.get(
+                    "cross-origin-opener-policy",
+                );
+                if (
+                    crossOriginOpenerPolicy &&
+                    crossOriginOpenerPolicy !== "cross-origin"
+                )
+                    return;
+                const accessControlAllowHeaders = headers.get(
+                    "Access-Control-Allow-Headers",
+                );
+                if (
+                    accessControlAllowHeaders &&
+                    accessControlAllowHeaders !== "*"
+                )
+                    return;
+
+                return true;
+            } catch (_) {
+                return;
+            }
+        })()) ?? false;
+}
 ---
 
 {
@@ -47,7 +83,7 @@ const isFootnoteRef = !isLinkCard && href.startsWith("#") && id !== undefined;
             rel="noopener noreferrer"
         >
             <div>
-                {faviconUrlString ? (
+                {canLoadImage ? (
                     <img
                         src={faviconUrlString}
                         width="16"
@@ -59,7 +95,7 @@ const isFootnoteRef = !isLinkCard && href.startsWith("#") && id !== undefined;
                     <Earth />
                 )}
                 {/* for background */}
-                {faviconUrlString ? (
+                {canLoadImage ? (
                     <img
                         src={faviconUrlString}
                         width="16"
