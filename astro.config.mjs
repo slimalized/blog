@@ -1,13 +1,15 @@
 // @ts-check
-import { defineConfig } from "astro/config";
+
 import mdx from "@astrojs/mdx";
 import react from "@astrojs/react";
+import { defineConfig } from "astro/config";
+import { fontOptimizer } from "./src/integrations/fontOptimizer";
+import { codeBlock } from "./src/utils/remark/codeBlock";
+import { details } from "./src/utils/remark/details";
 import { headingAnchor } from "./src/utils/remark/headingAnchor";
 import { linkCard } from "./src/utils/remark/linkCard";
 import { twitterQuote } from "./src/utils/remark/twitterQuote";
-import { codeBlock } from "./src/utils/remark/codeBlock";
-import { details } from "./src/utils/remark/details";
-import { fontOptimizer } from "./src/integrations/fontOptimizer";
+import { video } from "./src/utils/remark/video";
 
 // https://astro.build/config
 export default defineConfig({
@@ -18,7 +20,14 @@ export default defineConfig({
 	integrations: [mdx(), react(), fontOptimizer()],
 	markdown: {
 		// "details" changes the structure of the tree, so call it first.
-		remarkPlugins: [details, headingAnchor, linkCard, twitterQuote, codeBlock],
+		remarkPlugins: [
+			details,
+			headingAnchor,
+			linkCard,
+			twitterQuote,
+			codeBlock,
+			video,
+		],
 		remarkRehype: {
 			clobberPrefix: "",
 			footnoteLabel: "脚注",

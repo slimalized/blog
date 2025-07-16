@@ -1,0 +1,26 @@
+---
+import type { VideoProps } from "../../utils/remark/video";
+import { VideoPlayer } from "./VideoPlayer";
+
+const { src, caption } = Astro.props as VideoProps;
+---
+
+<figure class="video-figure">
+    <VideoPlayer src={src} client:visible />
+    {caption && <figcaption>{caption}</figcaption>}
+</figure>
+
+<style>
+    figure.video-figure:has(video) {
+        display: grid;
+        row-gap: var(--space-xs);
+        place-items: center;
+        margin-block-start: var(--space-xl);
+    }
+
+    figcaption:is(video + *) {
+        padding-block-start: var(--space-xs);
+        font-size: var(--font-size-s);
+        line-height: var(--line-height-jp-s);
+    }
+</style>
