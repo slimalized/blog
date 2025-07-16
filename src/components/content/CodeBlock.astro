@@ -16,25 +16,29 @@ const langID: { [key: string]: string } = {
     md: "markdown",
     js: "javascript",
     ts: "typescript",
-    bash: "shellscript",
+    bash: "shell",
     sh: "shellscript",
-    shell: "shellscript",
-    zsh: "shellscript",
+    shell: "shell",
+    zsh: "shell",
 };
 
 const { lang, title: _title, code: _code } = Astro.props as CodeBlockProps;
 const code = decodeURIComponent(_code);
-const id = `id-${nanoid()}`;
+const rippleWrapperId = `ripple-wrapper-id-${nanoid()}`;
 const title = _title ?? langID[lang] ?? lang;
 ---
 
 <figure>
     <figcaption>
         <span data-title={title}>{title}</span>
-        <CopyCodeButton code={code} codeBlockId={id} client:visible />
+        <CopyCodeButton
+            code={code}
+            rippleWrapperId={rippleWrapperId}
+            client:visible
+        />
     </figcaption>
     <div>
-        <div id={id} aria-hidden="true"></div>
+        <div id={rippleWrapperId} aria-hidden="true"></div>
         <Code
             tabindex="-1"
             lang={lang as

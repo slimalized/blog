@@ -6,27 +6,27 @@ import styles from "./CopyCodeButton.module.css";
 
 interface CopyCodeButtonProps {
 	code: string;
-	codeBlockId: string;
+	rippleWrapperId: string;
 	text?: string;
 }
 
 export const CopyCodeButton = ({
 	code,
-	codeBlockId,
+	rippleWrapperId,
 	text = "Code",
 }: CopyCodeButtonProps) => {
 	const { isCopied, copy } = useCopy(code);
 	const { ripples, addRipple } = useRipples();
-	const codeBlockRef = useRef<HTMLElement | null>(null);
+	const rippleWrapperRef = useRef<HTMLElement | null>(null);
 
 	useEffect(() => {
-		if (codeBlockId) {
-			const codeBlock = document.getElementById(codeBlockId);
-			if (codeBlock) {
-				codeBlockRef.current = codeBlock;
+		if (rippleWrapperId) {
+			const rippleWrapper = document.getElementById(rippleWrapperId);
+			if (rippleWrapper) {
+				rippleWrapperRef.current = rippleWrapper;
 			}
 		}
-	}, [codeBlockId]);
+	}, [rippleWrapperId]);
 
 	const handleClick = async () => {
 		await copy(); // Copy code.
@@ -47,10 +47,10 @@ export const CopyCodeButton = ({
 			</button>
 			{Array.from(ripples).map(
 				(rippleId) =>
-					codeBlockRef.current &&
+					rippleWrapperRef.current &&
 					createPortal(
 						<div aria-hidden="true" key={rippleId} className={styles.ripple} />,
-						codeBlockRef.current,
+						rippleWrapperRef.current,
 						rippleId,
 					),
 			)}
