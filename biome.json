@@ -18,6 +18,9 @@
 		"enabled": true,
 		"rules": {
 			"recommended": true,
+			"correctness": {
+				"noUnusedVariables": "warn"
+			},
 			"style": {
 				"noParameterAssign": "error",
 				"useAsConstAssertion": "error",
