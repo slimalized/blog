@@ -19,12 +19,6 @@ export default defineConfig({
 	markdown: {
 		// "details" changes the structure of the tree, so call it first.
 		remarkPlugins: [details, headingAnchor, linkCard, twitterQuote, codeBlock],
-		shikiConfig: {
-			themes: {
-				light: "github-light",
-				dark: "github-dark",
-			},
-		},
 		remarkRehype: {
 			clobberPrefix: "",
 			footnoteLabel: "脚注",
