@@ -21,13 +21,14 @@
 	--space-m: calc(var(--font-size-base) * 1.2);
 	--space-l: calc(var(--font-size-base) * 1.4);
 	--space-xl: calc(var(--font-size-base) * 2.6);
-	--space-xxl: calc(var(--font-size-base) * 4.0);
+	--space-xxl: calc(var(--font-size-base) * 4);
 	--space-xxxl: calc(var(--font-size-base) * 6.6);
 
 	/* box-shadow */
 	--box-shadow-s: 0 1px 2px 0 rgb(0 0 0 / 5%);
-	--box-shadow-m: 0 0 1px rgb(3 7 18 / 3%), 0 2px 2px rgb(3 7 18 / 5%), 0 4px
-		5px rgb(3 7 18 / 8%);
+	--box-shadow-m:
+		0 0 1px rgb(3 7 18 / 3%), 0 2px 2px rgb(3 7 18 / 5%), 0 4px 5px
+		rgb(3 7 18 / 8%);
 
 	/* line-height */
 	--line-height-none: 1;
@@ -413,4 +414,3 @@
 	--color-background: #191915;
 	--color-background-code: #24292e;
 }
-

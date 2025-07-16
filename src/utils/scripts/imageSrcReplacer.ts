@@ -5,7 +5,7 @@ import { site } from "../consts";
 
 // Matches `![<caption>](/media/<posts|works>/<id>/<file>)` or `![](/media/<posts|works>/<id>/<file>)` with optional whitespace at the start and end
 const markdownImageSourceRegex =
-	/^\s*!\[(?<caption>[^\]]*)\]\(\/media\/(?<contentType>[^)\/\s]+)\/(?<id>[^)\/\s]+)\/(?<file>[^)\/\s]+)\)\s*$/i;
+	/^\s*!\[(?<caption>[^\]]*)\]\(\/media\/(?<contentType>[^)/\s]+)\/(?<id>[^)/\s]+)\/(?<file>[^)/\s]+)\)\s*$/i;
 
 const main = async () => {
 	const [contentType, mdxFileName] = process.argv[2].split("/");

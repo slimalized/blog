@@ -32,6 +32,7 @@ export const DetailsContent = ({ children }: DetailsContainerProps) => {
 			open={isOpen}
 			onToggle={handleDetailsToggle}
 		>
+			{/** biome-ignore lint/a11y/noStaticElementInteractions: Assign the role of opening and closing the summary to toggle-button. */}
 			<summary tabIndex={-1} onClick={handleSummaryClick} onKeyDown={() => {}}>
 				<button
 					className={styles["toggle-button"]}

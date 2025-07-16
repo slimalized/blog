@@ -12,13 +12,17 @@ button.copy-button {
 	cursor: pointer;
 	background-color: transparent;
 	border: none;
-	transition: opacity 200ms, scale 100ms;
+	transition:
+		opacity 200ms,
+		scale 100ms;
 }
 
 span:is(button.copy-button > *) {
 	height: 100%;
 	user-select: none;
-	transition: translate 200ms, color 200ms;
+	transition:
+		translate 200ms,
+		color 200ms;
 }
 
 span:is(button.copy-button > *):first-of-type[data-is-copied="true"] {

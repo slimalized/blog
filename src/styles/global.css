@@ -8,8 +8,9 @@
 	font-family: "Noto Sans JP";
 	font-style: normal;
 	font-weight: 400;
-	src: local("Noto Sans JP"), url("/fonts/noto-sans-jp_regular_400.woff2")
-		format("woff2");
+	src:
+		local("Noto Sans JP"),
+		url("/fonts/noto-sans-jp_regular_400.woff2") format("woff2");
 	font-display: swap;
 }
 
@@ -17,8 +18,9 @@
 	font-family: "Noto Sans JP";
 	font-style: normal;
 	font-weight: 700;
-	src: local("Noto Sans JP"), url("/fonts/noto-sans-jp_bold_700.woff2")
-		format("woff2");
+	src:
+		local("Noto Sans JP"),
+		url("/fonts/noto-sans-jp_bold_700.woff2") format("woff2");
 	font-display: swap;
 }
 
@@ -26,7 +28,8 @@
 	font-family: "Zen Kaku Gothic New";
 	font-style: normal;
 	font-weight: 500;
-	src: local("Zen Kaku Gothic New"),
+	src:
+		local("Zen Kaku Gothic New"),
 		url("/fonts/zen-kaku-gothic-new_medium_500.woff2") format("woff2");
 	font-display: swap;
 }
@@ -35,8 +38,9 @@
 	font-family: "JetBrains Mono";
 	font-style: normal;
 	font-weight: 400;
-	src: local("JetBrains Mono"), url("/fonts/jetbrains-mono_regular_400.woff2")
-		format("woff2");
+	src:
+		local("JetBrains Mono"),
+		url("/fonts/jetbrains-mono_regular_400.woff2") format("woff2");
 	font-display: swap;
 }
 

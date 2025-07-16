@@ -22,7 +22,9 @@
 		height: 100%;
 		font-size: var(--font-size-m);
 		color: var(--color-primary-text-h);
-		transition: transform 250ms, color 0ms;
+		transition:
+			transform 250ms,
+			color 0ms;
 		transition-timing-function: ease;
 	}
 

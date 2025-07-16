@@ -11,7 +11,10 @@ button.copy-button {
 	background-color: transparent;
 	border: none;
 	border-radius: var(--border-radius-pill);
-	transition: translate 200ms, opacity 200ms, scale 100ms;
+	transition:
+		translate 200ms,
+		opacity 200ms,
+		scale 100ms;
 }
 
 button.copy-button::Before {
@@ -48,7 +51,9 @@ span:is(button.copy-button > *) {
 	height: 100%;
 	font-size: var(--font-size-m);
 	color: var(--color-primary-text-ha);
-	transition: translate 200ms, opacity 200ms;
+	transition:
+		translate 200ms,
+		opacity 200ms;
 
 	svg {
 		--size: var(--font-size-xs);

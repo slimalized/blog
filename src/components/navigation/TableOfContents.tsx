@@ -1,6 +1,6 @@
 import type { MarkdownHeading } from "astro";
-import { useEffect, useRef, useState } from "react";
 import type { JSX, RefObject } from "react";
+import { useEffect, useRef, useState } from "react";
 import styles from "./TableOfContents.module.css";
 
 // Only headings of levels 2, 3, and 4 are used in the article.
@@ -69,7 +69,10 @@ const observerOptions: IntersectionObserverInit = {
 export const TableOfContents = ({
 	headings: _headings,
 	depthLimit = 3,
-}: { headings: MarkdownHeading[]; depthLimit?: Depth }) => {
+}: {
+	headings: MarkdownHeading[];
+	depthLimit?: Depth;
+}) => {
 	const headings = _headings.filter((heading) => heading.depth <= depthLimit);
 	const headingElementsRef = useRef<HTMLElement[]>([]);
 	const scrollDirectionRef = useRef<"down" | "up" | undefined>(undefined);
@@ -150,10 +153,7 @@ export const TableOfContents = ({
 	if (headings.length === 0) return null;
 
 	return (
-		<div
-			id={styles["table-of-contents-wrapper"]}
-			aria-label="Table of Contents"
-		>
+		<div id={styles["table-of-contents-wrapper"]}>
 			<nav id={styles["table-of-contents"]}>
 				{CreateTableOfContentsList(headings, 2, activeIds, itemRefs)}
 			</nav>

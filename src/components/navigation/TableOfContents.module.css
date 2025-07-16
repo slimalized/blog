@@ -45,7 +45,6 @@ div#table-of-contents-wrapper::after {
 	background-image: var(--bottom-gradient);
 }
 
-
 p:is(nav#table-of-contents > *) {
 	margin-block-start: 0;
 	font-size: var(--font-size-s);
@@ -101,8 +100,12 @@ a:is(ol:is(.ol-depth-3, .ol-depth-2) > li > *) {
 	text-decoration: none;
 	scroll-margin-block: calc(var(--font-size-s) * var(--line-height-jp-m));
 	border-inline-start: solid 2px transparent;
-	transition: border-color 100ms, scale 100ms, rotate 250ms, background-color
-		100ms, color 100ms;
+	transition:
+		border-color 100ms,
+		scale 100ms,
+		rotate 250ms,
+		background-color 100ms,
+		color 100ms;
 	transition-timing-function: ease-in;
 
 	&[data-is-active="true"] {
