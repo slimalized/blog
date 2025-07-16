@@ -6,10 +6,9 @@ interface Props {
     alt: string;
     src: string;
     loading?: "lazy" | "eager";
-    linkable?: undefined | false;
 }
 
-const { alt, src: _src, loading = "lazy", linkable = true } = Astro.props;
+const { alt, src: _src, loading = "lazy" } = Astro.props;
 
 const extRegex = /\.(avif|svg)$/;
 
@@ -37,64 +36,41 @@ const largeWidth = isValid
     // failed to load message
     !isValid && (
         <p>
-            failed to load <code>{_src}</code>
+            failed to load <code>{src.original}</code>
         </p>
     )
 }
 
 {
-    // svg with link
-    isValid && isSvg && linkable && (
-        <a href={_src} target="_blank" rel="noopener noreferrer">
-            <img src={_src} alt={alt} loading="lazy" />
-        </a>
-    )
+    // svg
+    isValid && isSvg && <img src={src.original} alt={alt} loading="lazy" />
 }
 
 {
-    // svg without link
-    isValid && isSvg && !linkable && <img src={_src} alt={alt} loading="lazy" />
-}
-
-{
-    // picture with/without link
+    // avif (picture)
     isValid && !isSvg && (
         <picture>
             <source
                 media={`(max-width: ${imageSizes.small}px)`}
-                srcset={imageSizes.small >= originalWidth ? _src : src.small}
+                srcset={
+                    imageSizes.small >= originalWidth ? src.original : src.small
+                }
                 width={smallWidth}
                 height={Math.floor(
                     ((smallWidth as number) * originalHeight) / originalWidth,
                 )}
             />
-            {linkable ? (
-                <a href={_src} target="_blank" rel="noopener noreferrer">
-                    <img
-                        src={
-                            imageSizes.large >= originalWidth ? _src : src.large
-                        }
-                        alt={alt}
-                        width={largeWidth}
-                        height={Math.floor(
-                            ((largeWidth as number) * originalHeight) /
-                                originalWidth,
-                        )}
-                        loading={loading}
-                    />
-                </a>
-            ) : (
-                <img
-                    src={imageSizes.large >= originalWidth ? _src : src.large}
-                    alt={alt}
-                    width={largeWidth}
-                    height={Math.floor(
-                        ((largeWidth as number) * originalHeight) /
-                            originalWidth,
-                    )}
-                    loading={loading}
-                />
-            )}
+            <img
+                src={
+                    imageSizes.large >= originalWidth ? src.original : src.large
+                }
+                alt={alt}
+                width={largeWidth}
+                height={Math.floor(
+                    ((largeWidth as number) * originalHeight) / originalWidth,
+                )}
+                loading={loading}
+            />
         </picture>
     )
 }

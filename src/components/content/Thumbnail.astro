@@ -26,12 +26,7 @@ const isWorks = category !== undefined;
         ) : isLocal ? (
             <img src={src} alt={alt} loading="eager" />
         ) : (
-            <OptimizedImage
-                src={src}
-                alt={alt}
-                loading="eager"
-                linkable={false}
-            />
+            <OptimizedImage src={src} alt={alt} loading="eager" />
         )
     }
     {
