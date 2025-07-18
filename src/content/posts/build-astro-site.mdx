@@ -1,0 +1,1937 @@
+---
+title: Astroでシンプルなサイトを作る
+publishedDate: 2025-07-18
+thumbnail: https://media.slimalized.dev/posts/build-astro-site/default-og-image.avif
+---
+
+
+サイトを1年半ぶりに作り直しました。本記事ではその備忘録として、実装した主な技術要素について以下の項目に分けて紹介します。
+
+- サイト全体の構成
+- remarkプラグインによるMarkdownのカスタマイズ
+- フォントのサブセット化
+- ライトテーマ・ダークテーマの切り替え
+- 記事の目次
+- Cloudflare R2での画像管理
+- 動的OGPの作成
+
+なお、GitHubでサイトのコードを公開していますので、記事と合わせて適宜参考にしていただけると幸いです。なお、本記事の内容はコミット`e56941e`時点でのプロジェクト内容に準拠しています。
+
+https://github.com/slimalized/blog/tree/e56941eb08f18ad0cd87c0364c378c6a4574b44b
+
+## 構成
+
+まず、サイトの構成についてです。
+
+ベースとなるWebフレームワークには[Astro](https://astro.build/)を採用しました。このサイトの主な目的は「執筆した記事（静的コンテンツ）を配信すること」であるため、SSGが可能なフレームワークを視野に選択しました。CMSを使わず、Markdownで書いた記事をプロジェクト内で直接管理したかったため、Astroのコンテンツコレクションがこの要件を容易に実現できる点に魅力を感じて採用しました。[^1]
+
+[^1]: 他のプロジェクトで使用した経験があり、使い慣れていたことも理由の一つです。Next.jsやRemix(RRv7)も候補でしたが、Next.jsは使いこなせるほど熟知しておらず、RemixはRRv7になってから検索性が落ちてしまい、それぞれ複雑な機能を実装するのに時間がかかりそうだと感じたため今回は見送りました。
+
+サイトのプロジェクトは以下のような構成になっています。`pages/`でファイルベースルーティングをし、執筆した記事は`contents/`で管理しています。
+
+```plaintext
+src/
+├─ assets/ # faviconなどの静的なアセット
+├─ components/ # Reactコンポーネント、Astroコンポーネント
+├─ content/ # 執筆記事
+├─ integrations/ # build時に走らせるスクリプト
+├─ layouts/ # ヘッダーやフッターなどページ間で共有される共通UI
+├─ pages/ # ルーティング
+├─ styles/ # 全体に適応するスタイル
+└─ utils/ # その他（remark処理、React hooks、汎用関数など）
+```
+
+Astroでは`.astro`ファイルで再利用可能なUIコンポーネント（Astroコンポーネント）を作成することが基本となっています。Astroコンポーネントでは、他コンポーネントのインポートやデータフェッチなどをするJavaScript（TypeScript）の記述、HTMLによるマークアップ、CSSによるスタイル記述を一つのファイルに集約できます。ファイルが管理しやすくなる上、CSSのスコープがファイル内のHTML要素に限定されるため、クラス名を細かく考慮する必要がなくてとても扱いやすいです。また、AstroはReact、Svelte、Vue、SolidJSなどの主要なUIフレームワークとのインテグレーションを提供しており、これらをプロジェクトにインストールして手軽に利用することができます。Astroコンポーネント内でUIフレームワークを直接記述することはできませんが、既存のUIフレームワーク製コンポーネントをそのまま使用したり、Astroコンポーネント内でインポートして利用したりすることは可能です。サイトの実装ではこのAstroの柔軟性を活かして、複雑な処理が必要な一部のUIコンポーネントはReactで作成しました。
+
+https://docs.astro.build/ja/basics/astro-components/
+
+https://docs.astro.build/ja/guides/framework-components/
+
+スタイルの記述にはバニラなCSSを採用しています。Astroコンポーネントは前述の通りCSSのクラス名を考える手間が軽減されるため、Tailwind CSSのようなユーティリティファーストなCSSフレームワークは不要と判断しました。また、Reset CSSや全体に適用するグローバルなスタイルは`styles/`内に分けて管理し、`layouts/`内の共通UIにてインポートして利用しています。
+
+執筆記事の管理には先ほど触れたAstroの[コンテンツコレクション](https://5-0-0-beta.docs.astro.build/en/guides/content-collections/)を使用しています。コンテンツコレクションを利用することで、記事のタイトルや公開日などのメタデータ（MarkdownのFront Matter）を型安全に管理でき、これらをAstroコンポーネント内で簡単に取得、利用できます。今回は`remark`プラグインを作成してMarkdownをカスタマイズしたかったため、MDXファイルで記事を執筆し、`content/`配下で一元管理しています。
+
+サイトの公開には[Cloudflare Workers](https://developers.cloudflare.com/workers/)を使用しています。[Builds - Cloudflare Workers docs](https://developers.cloudflare.com/workers/ci-cd/builds/#connect-a-new-worker)に記載された手順に従い、WorkersのダッシュボードからGitHubのプロジェクトを紐づけることで、pushやpull requestに応じてビルドやデプロイ、プレビューリンクの発行などを自動で実施してくれます。
+
+## remarkプラグインによるMarkdownのカスタマイズ
+
+以下のページからこのサイトで対応しているMarkdown記法の一覧を確認できます。
+
+https://slimalized.dev/posts/markdown-sample
+
+コンテンツコレクションで管理されたMDXファイルは、ビルド時に標準のHTML要素へマッピングされて静的なHTMLへと変換されます。AstroのMDXインテグレーションでは、この変換プロセスに介入し、標準のHTML要素を独自実装したコンポーネントへマッピングできます。これにより、各見出しにアンカーリンクをつけたり、コードブロックにタイトルやコピーボタンを追加したりといった拡張が可能になります。
+
+```astro contentLayout.astro（抜粋）
+---
+import { type CollectionEntry, render } from "astro:content";
+import type { CollectionKey } from "astro:content";
+
+// 1. MappingしたいUIコンポーネントをインポート
+import {
+  Heading,
+  CodeBlock,
+  // ...
+} from "../components/content/index.astro";
+
+interface Props<T extends CollectionKey> {
+  entry: CollectionEntry<T>;
+}
+
+const { entry } = Astro.props as Props<CollectionKey>;
+const { Content } = await render(entry);
+
+// 2. マッピング対象のタグとUIコンポーネントをマッピング
+const components = {
+  h2: Heading,
+  h3: Heading,
+  h4: Heading,
+  pre: CodeBlock,
+  // ...
+};
+---
+
+<Layout ...>
+  <article>
+    <!-- ... -->
+    <!-- 3. Contentのcomponentsにマッピングしたコンポーネントのオブジェクトを渡す -->
+    <Content components={components} />
+    <!-- ... -->
+  </article>
+</Layout>
+```
+
+マッピングするコンポーネントは、remarkのプラグインを用いることで柔軟にカスタマイズすることが可能です。ここからは、実際に実装したMarkdown用コンポーネントについて順に紹介していきます。
+
+### 見出しにアンカーリンクをつける
+
+Astroではデフォルトで、各見出し要素にテキストに応じた`id`が付与されます。この`id`をURLの末尾に`#id`の形で追加すると、その見出しへのアンカーリンクとして機能します。例えば、この節へのアンカーリンクは次のようになります。
+
+```plaintext
+https://slimalized.dev/posts/build-astro-site#見出しにアンカーリンクをつける
+```
+
+しかし、このアンカーリンクを利用するたびに`id`を調べるのは、手間がかかる作業です。そこで、カスタムコンポーネントをマッピングし、各見出しの先頭にその見出し自身へのアンカーリンク（`#`アイコン）を自動で付与するように拡張しました。
+
+Astroコンポーネント側では、要素ごとに対応したメタデータを`Astro.props`を通してMDXファイルから取得できます。例えば`h2`タグにマッピングしたAstroコンポーネントでは、`Astro.props`から`{id: string;}`型の値を取得できます。この節の場合は`{id: "見出しにアンカーリンクをつける"}`という値が取得できます。しかし、このままでは`Astro.props`から`id`のみしか取得できないため、見出しテキスト自体の情報が欠落してしまいます。例えば「a BC d」のようなスペースや大文字小文字を含む見出しテキストの場合、IDは「a-bc-d」のようにURLに適した形に変換されます。つまり、`id`と見出しテキストが異なる場合があるため、`id`の情報だけではカスタムコンポーネントで適切なHTML要素を構成することができません。
+
+```astro
+---
+// h2 にマッピングするコンポーネント
+
+const { id } = Astro.props; // id = "a-bc-d" 
+const pageUrl = // ページのURL
+---
+
+<h2>
+  <!-- アンカーリンクは付与できた。 -->
+  <a href={`${pageUrl}#${id}`}>#</a> 
+  <!-- ここに見出しテキスト「a BC d」を入れたい。
+       しかし、idの値（a-bc-d）しか参照できない。 -->
+</h2>
+```
+
+この課題を解決するため、見出しテキストを`Astro.props`に渡すためのremarkプラグインを作成します。[remark](https://remark.js.org/)はMarkdownの処理系で、Markdownをmdastという抽象構文木に変換することができます。AstroのMarkdown変換もこのremarkを利用しており、大まかには以下の流れでMarkdownをHTMLに変換します。
+
+1. Markdown → MDAST（Markdownにおける抽象構文木）
+2. MDAST → HAST（HTMLにおける抽象構文木）
+3. HAST → HTML
+
+Astroでは、[remarkプラグインを追加してMDASTに処理を加えることができます](https://docs.astro.build/ja/guides/markdown-content/#markdownプラグイン)。これにより、以下のようにステップ1と2の間に独自の処理を挟んでMDASTを直接操作できます。今回は、見出しテキストの情報をMDASTノードに付加する処理を追加します。
+
+1. Markdown → MDAST
+2. **MDASTの特定の箇所を、remarkプラグインを用いて処理**
+3. MDAST → HAST
+4. HAST → HTML
+
+[unist-util-inspect](https://github.com/syntax-tree/unist-util-inspect)（MDASTを木構造形式で確認できるパッケージ）を用いて「[Markdownのサンプル](https://slimalized.dev/posts/markdown-sample)」のMDASTを表示すると、以下のような出力が得られます。
+
+![inspectの出力（冒頭部分の構造の抜粋）](https://media.slimalized.dev/posts/build-astro-site/inspect.avif)
+
+この出力から次のことがわかります。
+
+- `heading`ノードは見出しの深さに関わらず`root`の直下に位置する
+- `depth`プロパティに深さの情報を保有する
+- 子要素に`text`ノードを持つ。この`text`の`value`が「見出しテキスト」である
+
+すなわち、該当する`heading`ノードから子要素の`text`が持つ`value`を取得し、それを`Astro.props`に渡せるようにすればよいということです。
+
+`heading`ノードに処理を行う`remark`プラグインの雛形は以下のようになります。[unist-util-visit](https://github.com/syntax-tree/unist-util-visit)パッケージの`visit`関数は、名前の通り特定のノードを訪れて処理を行う関数です。与えたMDAST（第1引数）内のノード（第2引数）を、インデックスの若い順に（`inspect`で表示されたツリーの上から下に向けて）訪れ、第3引数で与えた処理を順に実行していきます。
+
+```ts remarkプラグインの雛形
+import type { Heading, Node, Root } from "mdast";
+import type { Plugin } from "unified";
+import { inspect } from "unist-util-inspect";
+import { type Visitor, visit } from "unist-util-visit";
+
+const visitor: Visitor<Heading> = (node, index, parent) => {
+  // ここに実行する処理を記述する
+};
+
+export const headingAnchor: Plugin<[], Root> = () => {
+  return (tree: Node) => {
+    // console.log(inspect(tree)); // MDASTの表示
+    visit(tree, "heading", visitor);
+  };
+};
+```
+
+h2のアンカーリンクの実装に必要な処理を記述すると、以下のようになります。`data`プロパティの`hProperties`に渡した値は、HTMLタグに付与される属性の指定であり、`Astro.props`から参照できるようになります。これにより、カスタムコンポーネント側で`Astro.props`から`id`と`value`の両方を取得できるようになり、意図通りのHTML要素を構築できるようになります。
+
+```ts headingAnchor.ts（抜粋）
+import type { Heading, Node, Root, Text } from "mdast";
+import type { Plugin } from "unified";
+import { type Visitor, visit } from "unist-util-visit";
+import { inspect } from "unist-util-inspect";
+
+export interface HeadingProps {
+  value?: string;
+  id: string;
+}
+
+const visitor: Visitor<Heading> = (node, index, parent) => {
+  if (parent === undefined || index === undefined) return;
+
+  const heading: Heading = {
+    data: {
+      hProperties: {
+        value: (node.children[0] as Text).value, // hPropertiesを通して、Astro.propsから見出しテキストを参照できるようになる
+      } satisfies Pick<HeadingProps, "value">,
+    },
+    ...node,
+  };
+
+  parent.children.splice(index, 1, heading); // 現在のノードを置き換える
+};
+
+export const headingAnchor: Plugin<[], Root> = () => {
+  return (tree: Node) => {
+    visit(tree, "heading", visitor);
+  };
+};
+```
+
+```astro
+---
+// h2 にマッピングするコンポーネント
+
+const { id, value } = Astro.props; // id = "a-bc-d", value = "a BC d"
+const pageUrl = // ページのURL
+---
+
+<h2>
+  <a href={`${pageUrl}#${id}`}>#</a> 
+  {value}
+</h2>
+```
+
+このように、remarkプラグインの開発は、以下のサイクルで行うことができます。
+
+1. カスタムコンポーネントで必要となる情報を`Astro.props`でどう受け取りたいかを定義
+2. `inspect`でMDASTの構造を確認し、置き換えたい部分の構造を特定
+3. `visit`で対象のノードを操作し、`hProperties`などを利用してノードに情報を付加
+4. 元のノードを情報が付加された新しいノードで置換
+5. `Astro.props`で期待通りの情報が受け取れることを確認し、コンポーネントを作成
+
+参考：
+
+https://zenn.dev/chot/articles/7885c407aab52d
+
+### コードブロックにタイトルとコピーボタンをつける
+
+コードブロックには、タイトルやコードのコピーボタンを追加しています。「`copy code`」と書かれたボタンを押すとクリップボードにコードがコピーされます。また、ボタンのテキストが「`copied code`」に変化し、コピー対象のコードに波紋が広がります。
+
+```js hi.js
+console.log("Hi!");
+```
+
+上記のコードブロックは、Markdown内で以下のように記述されています。
+
+````md
+```js hi.js
+console.log("Hi!");
+```
+````  
+
+#### タイトルをつける
+
+Astroの標準仕様では、コードブロックの開始フェンス（` ``` `）の後に言語を指定するとシンタックスハイライトが適用されます。さらに、言語の後に空白を空けて記述したテキストは、内部で`meta`プロパティとして参照可能です。これを利用し、`remark`プラグインを通してコードブロックの`meta`を`title`として`Astro.props`から参照できるようにしました。
+
+具体的には、MDASTの`code`ノードを`visit`関数で走査し、ノードを置き換えまています。なお、Astroの[Codeコンポーネント](https://docs.astro.build/ja/guides/syntax-highlighting/#code-)との干渉が原因か、`Code`型のノードではうまく動作しなかったため、抽象インターフェースである[Literal](https://github.com/syntax-tree/mdast/blob/main/readme.md#literal)ノードを用いて、`data.hName`で`pre`タグをカスタムの`CodeBlock`コンポーネントにマッピングする設計にしています。この実装では`Literal`ノードの必須プロパティである`value`や`type`は使用しないので、適当な値を設定しています。もっと直感的な方法があると思いますが、ひとまず動いているので良しとしています。
+
+```ts codeBlock.ts
+import type { Code, Parent, Root } from "mdast";
+import type { Plugin } from "unified";
+import type { Node } from "unist";
+import { type Visitor, visit } from "unist-util-visit";
+
+export interface CodeBlockProps {
+  lang: string;
+  title?: string;
+  code: string;
+}
+
+const visitor: Visitor<Code> = (node, index, parent) => {
+  if (!parent || index === undefined) {
+    return;
+  }
+
+  const { lang, meta, value } = node;
+  const title = meta;
+
+  const code: Parent = {
+    type: "pre",
+    data: {
+      hName: "pre",
+      hProperties: {
+        code: encodeURIComponent(value),
+        ...(lang ? { lang } : { lang: "text" }),
+        ...(title ? { title } : {}),
+      } satisfies CodeBlockProps,
+    },
+    children: [],
+  };
+
+  parent.children.splice(index, 1, code);
+};
+
+export const codeBlock: Plugin<[], Root> = () => {
+  return (tree: Node) => {
+    visit(tree, "code", visitor);
+  };
+};
+```
+
+Astroでは、標準で[Codeコンポーネント](https://docs.astro.build/ja/guides/syntax-highlighting/#code-)が提供されており、内部で[Shiki](https://shiki.matsu.io/)を用いてシンタックスハイライトをつけてくれます。
+
+```astro
+---
+import { Code } from 'astro:components';
+---
+<Code
+  lang="js"
+  code={`console.log("hello world!");`}
+  themes={{ light: "github-light", dark: "github-dark" }} {/* ライトモード・ダークモードでテーマを切り替える */}
+/>
+```
+
+この`Code`コンポーネントを使い、remarkプラグインから渡されたプロパティを元にタイトル付きのコードブロックを構築します。実装した`CodeBlock.astro`では、全体を`figure`タグで囲み、`figcaption`でタイトルを表示します。`meta`情報（タイトル）が指定されていない場合は、代わりに言語名を表示します。
+
+```astro CodeBlock.astro（抜粋）
+---
+import { Code } from "astro:components";
+import { nanoid } from "nanoid";
+import type { BuiltinLanguage, LanguageRegistration, SpecialLanguage } from "shiki";
+import type { CodeBlockProps } from "../../utils/remark/codeBlock";
+import { CopyCodeButton } from "./CopyCodeButton";
+
+const langID: { [key: string]: string } = {
+  md: "markdown",
+  js: "javascript",
+  ts: "typescript",
+  bash: "shell",
+  sh: "shellscript",
+  shell: "shell",
+  zsh: "shell",
+};
+
+const { lang, title: _title, code: _code } = Astro.props as CodeBlockProps;
+const code = decodeURIComponent(_code);
+const id = `id-${nanoid()}`;
+const title = _title ?? langID[lang] ?? lang;
+---
+<figure>
+  <figcaption>
+    <span>{title}</span>
+  </figcaption>
+  <div>
+    <Code
+    lang={lang as BuiltinLanguage | SpecialLanguage | LanguageRegistration | undefined}
+    code={code}
+    themes={{ light: "github-light", dark: "github-dark" }}
+    />
+  </div>
+</figure>
+```
+
+:::details ダークモードでのテーマ切り替え
+
+「[#テーマの切り替え](#テーマの切り替え)」の節にて後述しますが、本サイトではドキュメントのroot要素（`html`タグ）に`data-theme`属性（`"light" | "dark"`）を付与することでテーマを切り替えています。AstroのCodeコンポーネントが出力するコードブロックのスタイルは`.astro-code`クラスで調整できるため、これを利用してダークテーマ用の色を適用しています。[^2]
+
+```css global.css（抜粋）
+:root[data-theme="light"] {
+  color-scheme: light; /* フォームコントロールやスクロールバーなどの色を明るくする */
+
+  /* ...（ライトモード向けのカラー変数などを定義） */
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark; /* フォームコントロールやスクロールバーなどの色を暗くする */
+
+  /* ...（ダークモード向けのカラー変数などを定義） */
+
+  @layer base {
+    .astro-code,
+    .astro-code span {
+      color: var(--shiki-dark) !important;
+    }
+  }
+}
+```
+
+[^2]: [シンタックスハイライト | Docs](https://docs.astro.build/ja/guides/syntax-highlighting/#ライトモードとダークモードのテーマを設定する)
+
+:::
+
+参考：
+
+https://blog.mono0x.net/2023/07/10/astro-syntax-highlight-with-title/
+
+#### コピーボタンをつける
+
+コードのコピーでは、`useCopy`というカスタムフックを作成して、クリップボード操作と状態の管理をしています。このフックは以下の2つを提供します。
+
+- `isCopied`（真偽値）：与えたテキストがコピーされたかを示す
+- `copy`（非同期関数）：[`navigator.clipboard.writeText`](https://developer.mozilla.org/ja/docs/Web/API/Clipboard/writeText)関数を用いてクリップボードにコードをコピーする
+
+コピー完了後にボタンのテキストを2秒間だけ「Copied Code」に変更します。なお、単純なsetTimeoutでは2秒以内にボタンが連打されると、表示の途中で古いタイマーが作動して表示が意図せず変化してしまいます。これを防ぐため、`useRef`でタイマーidを保持し、ボタンがクリックされるたびに既存のタイマーを破棄（`clearTimeout`）して新たなタイマーを設定し直すことで、最後のクリックから2秒後に表示が戻るような仕組みにしています。
+
+```ts useCopy.ts（抜粋）
+import { useCallback, useEffect, useRef, useState } from "react";
+
+export const useCopy = (text: string, duration = 2000) => {
+  const [isCopied, setIsCopied] = useState<boolean>(false);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
+
+  const copy = useCallback(async () => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setIsCopied(true);
+
+      // 既存のタイムアウト（前のクリックで設定されたタイムアウト）をクリア
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+      }
+
+      // 新しいタイムアウトを設定
+      timerRef.current = setTimeout(() => {
+        setIsCopied(false);
+        timerRef.current = null;
+      }, duration);
+    } catch (error) {
+      console.error("[useCopy] Failed to copy text: ", error);
+      setIsCopied(false);
+    }
+  }, [text, duration]);
+
+  // アンマウント時に設定済みのタイムアウトをクリア
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+      }
+    };
+  }, []);
+
+  return { isCopied, copy };
+};
+```
+
+#### コピー時に波紋のエフェクトを出す
+
+ユーザー体験の向上に繋げるため、コピーした際にコードに波紋エフェクトを出すようにしています。
+
+@video[コピーの様子](https://media.slimalized.dev/posts/build-astro-site/copy.mp4)
+
+エフェクトの原理は以下のとおりです。
+
+1. Codeコンポーネントの兄弟要素に、波紋エフェクト（ripple）の親となる空の`div`タグを用意
+2. コピーコードボタンを押すたびに、その空の`div`タグの中にrippleの`div`タグを追加（rippleはグラデーションをつけた正円が広がっていくアニメーション）
+3. アニメーションの終了のタイミングに合わせて、追加したrippleをDOMから削除
+
+rippleを管理するために、`useRipple`というカスタムフックを作成しました。このフックは以下の2つを提供します。
+
+- `ripples`：表示中の全ripple要素の`Set`。[nanoid](https://github.com/ai/nanoid)で生成した文字列を`id`として、識別している
+- `addRipple`（関数）：`ripples`に新しいrippleを追加し、加えてそのrippleを一定時間後に`ripples`から削除するためのタイマー（`setTimeout`）を設定する。このタイマーidはrippleの`id`と紐付けた`Map`で管理している
+
+```ts useRipple.ts（抜粋）
+import { nanoid } from "nanoid";
+import { useCallback, useEffect, useRef, useState } from "react";
+
+export const useRipples = (rippleDuration = 2000) => {
+  /*rippleIDのSet: 例: {
+      "ripple-id-6TjJ3pn95p_uhSHp6TOyX",
+      "ripple-id-nxRg27BibrInBwdRhMVSU",
+      "ripple-id--DHaoq_t3jPjGkr44pcI4",
+    }
+  */
+  const [ripples, setRipples] = useState<Set<string>>(new Set());
+  /*rippleIDとtimerIDとのMap: 例: {
+      "ripple-id-6TjJ3pn95p_uhSHp6TOyX": "1",
+      "ripple-id-nxRg27BibrInBwdRhMVSU": "2",
+      "ripple-id--DHaoq_t3jPjGkr44pcI4": "3",
+    }
+  */
+ 
+  const timersRef = useRef<Map<string, NodeJS.Timeout>>(new Map());
+
+  // アンマウント時にタイムアウトをクリア
+  useEffect(() => {
+    return () => {
+      for (const timeoutID of timersRef.current.values()) {
+        clearTimeout(timeoutID);
+      }
+      timersRef.current.clear();
+    };
+  }, []);
+
+  const addRipple = useCallback(() => {
+    const newRippleId = `ripple-id-${nanoid()}`;
+    // rippleIDの追加
+    setRipples((prevSet) => new Set(prevSet).add(newRippleId));
+
+    const timer = setTimeout(() => {
+      // 指定時間後に対応するrippleIDを削除
+      setRipples((prevSet) => {
+        const newSet = new Set(prevSet);
+        newSet.delete(newRippleId);
+        return newSet;
+      });
+      timersRef.current.delete(newRippleId);
+    }, rippleDuration);
+
+    timersRef.current.set(newRippleId, timer);
+
+    return newRippleId;
+  }, [rippleDuration]);
+
+  return { ripples, addRipple };
+};
+```
+
+rippleはボタンコンポーネント（`CopyCodeButton`）の子要素ではなく、空のdivタグの中に描画する必要があります。コンポーネントツリー上の異なる場所にあるDOMノードに子要素を追加するため、[createPortal](https://ja.react.dev/reference/react-dom/createPortal)を用いてレンダリングしています。各rippleは追加後にアニメーションを開始し`rippleDuration[ms]`後に削除されます。[^3]
+
+[^3]: 本当はripple側の`onAnimationEnd`時に`setRipples`で`ripple`の状態を変更して削除したかったのですが、ripple側から親要素（`CopyCodeButton`）の`state`を変更することになってしまい、アンチパターン気味だったのでやめました。
+
+```astro CodeBlock.astro（抜粋）
+---
+import { Code } from "astro:components";
+import { nanoid } from "nanoid";
+import type { BuiltinLanguage, LanguageRegistration, SpecialLanguage } from "shiki";
+import type { CodeBlockProps } from "../../utils/remark/codeBlock";
+import { CopyCodeButton } from "./CopyCodeButton";
+
+// ...
+
+const { lang, title: _title, code: _code } = Astro.props as CodeBlockProps;
+const code = decodeURIComponent(_code);
+// 空のdivのユニークなID（rippleWrapperId）を生成
+const rippleWrapperId = `ripple-wrapper-id-${nanoid()}`;
+
+// ...
+---
+
+<figure>
+  <figcaption>
+    <span data-title={title}>{title}</span>
+    <!-- CopyCodeButtonに対象となる空のdivのIDを渡す -->
+    <CopyCodeButton code={code} rippleWrapperId={rippleWrapperId} client:visible />
+  </figcaption>
+  <div>
+    <div id={rippleWrapperId} aria-hidden="true"></div>
+    <Code
+      {/*..*/} 
+      code={code}
+      themes={{ light: "github-light", dark: "github-dark" }}
+    />
+  </div>
+</figure>
+```
+
+```tsx CopyCodeButton.tsx（抜粋）
+import { useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
+import { useCopy } from "../../utils/hooks/useCopy";
+import { useRipples } from "../../utils/hooks/useRipples";
+import styles from "./CopyCodeButton.module.css";
+
+interface CopyCodeButtonProps {
+  code: string;
+  rippleWrapperId: string;
+  text?: string;
+}
+
+export const CopyCodeButton = ({
+  code,
+  rippleWrapperId,
+  text = "Code",
+}: CopyCodeButtonProps) => {
+  const { isCopied, copy } = useCopy(code);
+  const { ripples, addRipple } = useRipples();
+  const rippleWrapper = useRef<HTMLElement | null>(null);
+
+  // マウント時にReactの管轄外のrippleWrapperをuseRefに保管
+  useEffect(() => {
+    if (rippleWrapperId) {
+      const rippleWrapper = document.getElementById(rippleWrapperId);
+      if (rippleWrapper) {
+        rippleWrapperRef.current = rippleWrapper;
+      }
+    }
+  }, [rippleWrapperId]);
+
+  const handleClick = async () => {
+    await copy(); // コードのコピー
+    addRipple(); // rippleの追加
+  };
+
+  return (
+    <>
+      <button
+        type="button"
+        className={styles["copy-button"]}
+        aria-label="copy code button"
+        onClick={handleClick}
+      >
+        <span data-is-copied={isCopied}>Cop</span>
+        <span data-is-copied={isCopied}>y</span>
+        <span>{text}</span>
+      </button>
+      // RippleIdのそれぞれについて、rippleの正円を追加（削除するためのタイムアウトが設定されているので、正円が広がるアニメーションの終了に合わせて削除される）
+      {Array.from(ripples).map(
+        (rippleId) =>
+          rippleWrapper.current &&
+          createPortal(
+            <div aria-hidden="true" key={rippleId} className={styles.ripple} />,
+            rippleWrapper.current,
+            rippleId,
+          ),
+      )}
+    </>
+  );
+};
+```
+
+### リンクをカード形式で表示する
+
+他のテキストから独立した段落として記述されたURLを、自動的に情報リッチなカード形式のリンクで表示します。カードには、タイトル、説明、ファビコン画像が含まれます。
+
+https://slimalized.dev
+
+https://example.com
+
+```md
+https://slimalized.dev
+
+https://example.com
+```
+
+カードリンク作成の流れは以下の通りです。
+
+1. 単行のリンク（「子ノードが1つだけ」かつ「その子ノードの`type`が`link`」であるノード）を`visit`して`url`を取得
+2. [open-graph-scraper](https://github.com/jshemas/openGraphScraper)を用いて`url`からタイトル、説明、ホストネーム、ファビコン画像といったOGP情報を非同期で取得
+3. 取得したOGP情報を使って新しいカード形式のコンポーネント用ノードを生成し、元のリンクノードと置換
+
+必要なOGP情報を取得するため、`getLinkCardData`という関数を作成しています。内部で`getOpenGraph`と`resolveFaviconUrl`の2つをヘルパーとして呼び出しています。
+
+- `getOpenGraph`：`open-graph-scraper`の単なるエラーハンドリングラッパー
+- `resolveFaviconUrl`: OGPから取得したファビコンのURLを、実際に表示可能な形式に正規化する。ファビコンURLは絶対パス、相対パス、あるいは`undefined`の可能性があるため、それぞれのケースに対応している。特に、`undefined`の場合は、GoogleのファビコンAPIをフォールバックとして利用
+- `getLinkCardData`：上述の2つの関数を使用して、OGP情報のオブジェクトを返す
+
+```ts getLinkCardData
+import ogs from "open-graph-scraper";
+
+const getOpenGraph = async (url: URL) => {
+  try {
+    const ogResponse = await ogs({ url: url.toString() });
+    return ogResponse.result;
+  } catch (error) {
+    console.error(
+      "[getOpenGraph] Failed to get Open Graph: ",
+      (error as ErrorResult).result?.error,
+    );
+    return undefined;
+  }
+};
+
+/**
+ * faviconURLは以下の3パターン：
+ * - 絶対パス：e.g. "https://github.githubassets.com/favicons/favicon.svg"
+ * - 相対パス：e.g. "/favicon.svg"
+ * - undefined
+ *
+ * 相対パスの場合は絶対パスに変換。undefinedの場合は`https://www.google.com/s2/favicons?domain=${url}`の形に変換する
+ */
+const resolveFaviconUrl = async (_faviconUrl: string | undefined, url: URL) => {
+  const isRelativePath = _faviconUrl && !isValidUrl(_faviconUrl);
+  let faviconUrl = isRelativePath
+    ? new URL(_faviconUrl, url.origin).toString()
+    : _faviconUrl;
+  if (faviconUrl === undefined) {
+    faviconUrl = `https://www.google.com/s2/favicons?domain=${url}`;
+
+    const response = await fetch(faviconUrl, {
+      method: "HEAD",
+      signal: AbortSignal.timeout(10000),
+    });
+    if (!response.ok) {
+      return undefined;
+    }
+  }
+  return faviconUrl;
+};
+
+const getLinkCardData = async (url: URL) => {
+  const ogObject = await getOpenGraph(url);
+  if (ogObject === undefined) return;
+  return {
+    title: ogObject.ogTitle || url.hostname,
+    hostname: new URL(url).hostname,
+    faviconUrlString: await resolveFaviconUrl(ogObject.favicon, url),
+    description: ogObject.ogDescription,
+  } satisfies OgData;
+};
+```
+
+これらの関数を使い、実際にMDASTのノードを置き換えるremarkプラグインを実装します。なお、unist-util-visitが提供する`visitor`関数は同期的であるため、内部でawaitを使用してOGP情報の取得を直接待つことができません。そのため今までに掲示した実装とは異なり、ノードの置換処理を関数として配列に挿入し、最後にまとめて`Promise.allSettled`で挿入した関数を実行するという形式を採用しています。
+
+1. `visitor`関数でツリーを同期的に走査し、カード化対象のリンクノードを見つける
+2. 対象を見つけたら、そのノードの置換に必要な非同期処理（OGP取得とノード生成）を一つの関数として定義し、`transformers`という配列に一時的に格納
+3. ツリー全体の走査が完了した後、配列に格納しておいた全ての非同期処理を`Promise.allSettled`で並列実行し、一括でノードの置換を実施
+
+```ts linkCard.ts（抜粋）
+// ...
+
+export const linkCard: Plugin<[], Root> = () => {
+  return async (tree: Root) => {
+    // 置換処理の配列
+    const transformers: Transformer[] = [];
+
+    // 「非同期処理を必要とする置換処理」を配列に挿入する関数
+    const addTransformer = (link: Link, index: number, parent: Parent) => {
+      transformers.push(async () => {
+        const linkCardData = await getLinkCardData(new URL(link.url));
+        if (linkCardData === undefined) return;
+        const linkCardNode = createLinkCardNode(link, linkCardData);
+        parent.children.splice(index, 1, linkCardNode);
+      });
+    };
+
+    const visitor: Visitor<Paragraph> = (node, index, parent) => {
+      // ...
+
+      const link = node.children[0] as Link;
+      const urlString = link.url;
+      if (isValidUrl(urlString) && !isTwitterUrl(urlString)) {
+        // 1. 非同期処理を必要とする置換処理の関数を、配列に挿入
+        addTransformer(link, index, parent);
+      }
+    };
+
+    visit(tree, "paragraph", visitor);
+
+    // 2. visit終了後、最後にまとめて実行
+    const results = await Promise.allSettled(transformers.map((t) => t()));
+    for (const [index, result] of results.entries()) {
+      if (result.status === "rejected") {
+        console.error(
+        `[linkCard] Failed to transform link at index ${index}`,
+        result.reason,
+        );
+      }
+    }
+  };
+};
+
+// ...
+```
+
+参考：
+
+https://github.com/okaryo/remark-link-card-plus
+
+:::details ファビコンに応じて背景色をつける
+
+ファビコンの色に合わせてファビコン部分の背景色が淡く変化するようにしています（例：赤、緑、青が基調のファビコン）。
+
+https://www.youtube.com/
+
+https://qiita.com/
+
+https://anond.hatelabo.jp/
+
+力技ですが、CSSの重ね合わせとぼかしフィルターを利用して実装しています。
+
+1. 同じファビコン画像を2つ読み込む
+2. `position: absolute;`で2つを絶対位置で完全に重ねて配置
+3. 背後のファビコン画像を`transform: scale();`で拡大し、`filter: blur();`で強くぼかす
+
+:::
+
+### Xのポストを引用する
+
+Markdownに貼り付けられたXのURLを、埋め込みポスト風のコンポーネントに変換しています。
+
+https://x.com/jack/status/20
+
+```markdown
+https://x.com/jack/status/20
+```
+
+基本的な実装は、先程述べたリンクカード機能と一緒です。URLからOGP情報を取得する部分が、Xの[oembed API](https://developer.x.com/en/docs/x-for-websites/timelines/guides/oembed-api)を利用してポスト情報を取得する処理に置き換わっているイメージです。このAPIから取得したデータ（ポスト本文、投稿者情報、投稿日時など）を、カスタムコンポーネントに渡して表示します。
+
+まず、ツイートのURLを引数に取りoEmbed APIへリクエストを送信する`getTweetData`関数を実装します。この関数はAPIから取得したデータを、コンポーネントで扱いやすい形式（`TweetData`）に整形して返す役割を担っています。
+
+```ts getTweetData
+interface TweetData {
+  // ...
+}
+
+interface TweetOEmbedResponse {
+  // ...
+}
+
+const getTweetData = async (tweet: URL) => {
+  // hide_media=true, hide_thread=true を指定して不要な情報を削る
+  const oEmbedUrl = new URL(
+    `https://publish.twitter.com/oembed?url=${tweet}&hide_media=true&hide_thread=true`,
+  );
+  // ツイートデータの取得
+  const response = await fetch(oEmbedUrl, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+  if (!response.ok) {
+    return undefined;
+  }
+  const result = (await response.json()) as TweetOEmbedResponse;
+
+  // APIから返却されたHTMLをパース・整形する関数（後述）
+  const { html, postedDate } = extractTwitterQuote(result.html, result.url);
+  if (html === undefined || postedDate === undefined) {
+    return undefined;
+  }
+
+  return {
+    tweetUrlString: result.url,
+    authorName: result.author_name,
+    authorUrlString: result.author_url,
+    html,
+    postedDateString: postedDate.toString(),
+    referencedDateString: new Date().toString(),
+  } satisfies TweetData;
+};
+```
+
+oEmbed APIのレスポンスに含まれる`html`プロパティには、ポストをWebページに埋め込むためのHTMLコード一式が、以下のような文字列として格納されています。
+
+```html ポストのHTML
+<blockquote class="twitter-tweet" ...>
+  <p ...>{ツイート本文}</p>
+  &mdash; {ユーザー名} (@{ユーザーID})
+  <a href="https://twitter.com/.../status/...">
+    {投稿日時}
+  </a>
+</blockquote>
+<script async src="https://platform.twitter.com/widgets.js" ...></script>
+```
+
+今回は独自デザインのコンポーネントでツイートを表示するため、このHTMLをそのまま利用するのではなく、ここから必要な情報だけを抽出する`extractTwitterQuote`関数を実装しています。この関数では、HTML文字列を安全に操作するため、[jsdom](https://github.com/jsdom/jsdom)を用いて文字列を仮想的なDOMオブジェクトに変換してから情報を抽出します。処理の概要は以下の通りです。
+
+1. jsdomを用いてHTML文字列をDOMに変換。この時、埋め込みに不要な`widget.js`のスクリプトタグを除外
+2. ポスト内に含まれる`a`タグに、リンクが新規タブで開かれるように`target="_blank"`と`rel="noopener noreferrer nofollow"`属性を付与
+3. 投稿日の書かれた`a`タグを特定し、投稿日を取得。なお、投稿日の`a`タグの`href`の`pathname`と、ツイートの`url`の`pathname`が一致することを利用して、投稿日のリンクであるかを判定している
+4. `blockquote`タグ内のユーザ名表示を削除（`blockquote`の内部には不要であるため）
+5. DOMを文字列に戻し、`blockquote`の内部のHTMLのみを文字列として抽出
+
+```ts extractTwitterQuote
+import { JSDOM } from "jsdom";
+
+const extractTwitterQuote = (_html: string, tweetUrlString: string) => {
+  // 1. result.htmlをパース（不要なwidget.jsのスクリプトタグの除外も兼ねる）
+  const dom = new JSDOM(_html.split("\n")[0]);
+  const { document } = dom.window;
+
+  let postedDate: Date | undefined = undefined;
+  const aTags = document.getElementsByTagName("a");
+  for (const aTag of aTags) {
+    // 2. ポスト内に出現するaタグにtarget、rel属性を付与
+    aTag.setAttribute("target", "_blank");
+    aTag.setAttribute("rel", "noopener noreferrer nofollow");
+
+    const href = aTag.getAttribute("href") || "";
+    if (!isValidUrl(href)) continue;
+
+    // 3. 投稿日の取得
+    const hrefPath = new URL(href).pathname;
+    const tweetPath = new URL(tweetUrlString).pathname;
+    if (hrefPath === tweetPath && aTag.textContent) {
+      postedDate = new Date(aTag.textContent);
+      aTag.parentNode?.removeChild(aTag);
+    }
+  }
+  // 4. ユーザ名表示の削除
+  const userNameText = document.getElementsByTagName("p")[0].nextSibling;
+  if (userNameText && userNameText.nodeType === dom.window.Node.TEXT_NODE) {
+    userNameText.parentNode?.removeChild(userNameText);
+  }
+  // 5. domを文字列に戻し、blockquoteの内部のみを抽出
+  const htmlRegex =
+    /^<html><head><\/head><body><blockquote class="twitter-tweet" data-cards="hidden">([\s\S]*?)<\/blockquote><\/body><\/html>$/;
+  const html = dom.serialize().match(htmlRegex)?.[1];
+
+  return { html, postedDate };
+};
+```
+
+これらのデータ取得・整形処理を、リンクカードの時と同様の非同期処理パターンを持つremarkプラグインに統合することで、ポストの引用を実装しています。
+
+## フォントのサブセット化
+
+このサイトでは、`public/fonts`配下に配置した`WOFF2`形式のフォントファイルをCSS経由で読み込み、テキストのフォントファミリーに適用しています。なお、Astroの仕様上`public/`ディレクトリ内のファイルはビルド時に加工されず、そのまま最終的な出力ディレクトリにコピーされるようになっています。
+
+この方法はシンプルですが、日本語書体は欧文書体に比べて収録されている文字の種類が多いため、フォントファイル全体をそのまま配信するとページの読み込みに影響が出てしまいます。そこで重要になるのが、フォントファイルから実際にサイト内で使用する文字だけを抜き出してファイルサイズを削減する、サブセット化という技術です。幸いにも本サイトはSSGで作成されているため、ビルド時点ですべての静的HTMLファイルが生成され、サイト内で利用される文字を把握することができます。この点を活かし、本サイトではビルド完了時にすべてのHTMLファイルから使用文字を抽出し、それらをベースに`public/fonts`配下のフォントファイルを軽量なサブセット版に置換するインテグレーションを実装しました。
+
+### HTMLファイルから使用文字を抽出する
+
+まず、ビルド後のHTMLファイルから、使用文字を抽出する必要があります。
+
+単純にHTMLファイルをテキストとして読み込むだけでは、`head`タグ内の記述や属性名などの表示文章に関係ないタグの記述も抽出してしまいます。これを避けるために、[jsdom](https://github.com/jsdom/jsdom)を用いてHTML文字列を仮想的なDOMオブジェクトに変換した上で、構造を解釈して使用文字を抽出することにします。
+
+さらに、文字抽出精度を高めるためにフォントに応じた用途ごとに抽出対象を絞り込みます。例えばウェイトが太いフォントは`strong`タグで囲まれたテキストのみを抽出すれば十分です。これにより、各フォントファイルに含める文字を最小限に抑えられます。処理の全体像は以下の通りです。
+
+1. 対象のHTMLファイルを読み込み
+2. jsdomを用いて、HTML文字列を操作可能なDOMオブジェクトに変換
+3. フォントの用途に応じて、特定のタグ要素からテキストを抽出
+4. すべてのHTMLから抽出した各文字列を結合し、重複を削除して最終的な使用文字セットを作成
+
+この処理をする`collectTextContentFromHTML`関数と、複数のHTMLファイルから使用文字を抽出する`extractUsedCharacters`関数は以下の通りです。
+
+```ts collectTextContentFromHTML, extractUsedCharacters
+interface FontOptimizingOption {
+  fontPath: string; // public/からの相対パスでフォントファイルを指定
+  includeTagNames: TagName[]; // 文字抽出対象のタグ名
+  excludeTagNames?: TagName[]; // 除外するタグ名
+}
+
+const fontOptimizingOptions: FontOptimizingOption[] = [
+  {
+    // 1. Noto Sans JP 400: 基本文字用
+    fontPath: "fonts/noto-sans-jp_regular_400.woff2",
+    includeTagNames: ["body"],
+    excludeTagNames: ["script", "strong"],
+  },
+  {
+    // 2. Noto Sans JP 700: <strong>用
+    fontPath: "fonts/noto-sans-jp_bold_700.woff2",
+    includeTagNames: ["strong"],
+  },
+];
+
+// 与えられたhtmlファイルを読み込み、使用文字を抽出する関数
+const collectTextContentFromHTML = async (
+  htmlFilePath: string,
+  fontOptimizingOption: FontOptimizingOption,
+): Promise<string> => {
+  const { includeTagNames, excludeTagNames } = fontOptimizingOption;
+  const textContents: string[] = [];
+
+  try {
+    // HTMLファイルを読み込む
+    const htmlContent = await fs.readFile(htmlFilePath, "utf-8");
+    const virtualConsole = new VirtualConsole();
+    virtualConsole.on("error", () => {}); // JSDOMのエラーは無視
+    const { document } = new JSDOM(htmlContent, { virtualConsole }).window;
+
+    // 1. 除外タグをDOMから削除
+    const ExcludeDoms = (excludeTagNames ?? []).flatMap((tagName) =>
+      Array.from(document.getElementsByTagName(tagName)),
+    );
+    for (const dom of ExcludeDoms) {
+      dom.remove();
+    }
+
+    // 2. 指定タグからテキストを抽出
+    const IncludeDoms = includeTagNames.flatMap((tagName) =>
+      Array.from(document.getElementsByTagName(tagName)),
+    );
+    for (const dom of IncludeDoms) {
+      // 改行を除去し、前後の空白をトリム
+      const textContent = dom.textContent?.replace(/\n/g, "").trim() ?? "";
+      textContents.push(textContent);
+    }
+  } catch (error) {
+    console.error(
+      `[collectTextContentFromHTML] HTMLファイルの処理に失敗しました: ${htmlFilePath}`,
+      error,
+    );
+  }
+
+  return textContents.join("");
+};
+
+// 各HTMLファイルに`collectTextContentFromHTML`を適用し、使用文字を抽出する関数
+const extractUsedCharacters = async (
+  htmlFilePaths: string[],
+  fontOptimizingOption: FontOptimizingOption,
+): Promise<string> => {
+  const textContents: string[] = [];
+  for (const htmlFilePath of htmlFilePaths) {
+    // 各HTMLファイルからテキストを抽出
+    const textContent = await collectTextContentFromHTML(
+      htmlFilePath,
+      fontOptimizingOption,
+    );
+    textContents.push(textContent);
+  }
+  // すべての文字から重複を除去
+  const characterSet = new Set(textContents.join(""));
+  const usedCharacters = Array.from(characterSet).join("");
+  return usedCharacters;
+};
+```
+
+### フォントファイルをサブセット化する
+
+使用する文字セットが完成したら、次はその文字セットを使って実際のフォントファイルを加工します。この処理には[subset-font](https://github.com/papandreou/subset-font)というライブラリを利用しています。処理の流れは以下の通りです。
+
+1. 前述の`extractUsedCharacters`関数を用いて、サイト全体の使用文字を抽出
+2. サブセットかの対象となる元のフォントファイルを読み込む
+3. subset-fontにフォントデータと使用文字セットを渡し、サブセット化を実行
+4. 生成された軽量なサブセット版で、元のフォントファイルを上書き保存
+
+サブセット化を行う`optimizeFonts`関数は以下の通りです。
+
+```ts optimizeFonts
+const optimizeFonts = async (
+  htmlFilePaths: string[],
+  fontOptimizingOption: FontOptimizingOption,
+  dir: URL,
+): Promise<FontOptimizingLogInfo | undefined> => {
+  const { fontPath } = fontOptimizingOption;
+
+  // 1. HTMLファイルから使用文字を抽出する
+  const usedCharacters = await extractUsedCharacters(
+    htmlFilePaths,
+    fontOptimizingOption,
+  );
+
+  // 2. フォントファイルのパスを生成する
+  let fontFilePath: string;
+  if (URL.canParse(fontPath, dir)) {
+    fontFilePath = new URL(fontPath, dir).pathname;
+  } else {
+    console.error(`[optimizeFonts] Invalid font file path: ${fontPath}`);
+    return;
+  }
+
+  const prevFileSize = (await fs.stat(fontFilePath)).size;
+
+  // 3. フォントファイルを読み込む
+  let rawFontData: Buffer;
+  try {
+    rawFontData = await fs.readFile(fontFilePath);
+  } catch (error) {
+    console.error(
+      `[optimizeFonts] Failed to read font file: ${fontFilePath}`,
+      error,
+    );
+    return;
+  }
+
+  // 4. フォントをサブセット化
+  let optimizedFontData: Buffer;
+  try {
+    optimizedFontData = await subsetFont(rawFontData, usedCharacters, {
+      targetFormat: "woff2",
+    });
+  } catch (error) {
+    console.error(`[optimizeFonts] Failed to subset font: ${fontPath}`, error);
+    return;
+  }
+
+  // 5. サブセット化したフォントを書き込む
+  try {
+    await fs.writeFile(fontFilePath, optimizedFontData);
+  } catch (error) {
+    console.error(
+      `[optimizeFonts] Failed to write optimized font file: ${fontFilePath}`,
+      error,
+    );
+    return;
+  }
+
+  // ログ用の情報を返す
+  const optimizedFileSize = (await fs.stat(fontFilePath)).size;
+  const charsLength = usedCharacters.length;
+
+  return {
+    fontPath,
+    prevFileSize,
+    optimizedFileSize,
+    charsLength,
+  };
+};
+```
+
+### ビルド後にサブセット化を実行する
+
+最後に、ここまでの処理をAstroのビルドプロセスに組み込んで自動で実行されるようにします。これにはAstroが提供するインテグレーションAPIを利用します。Astroでは`astro.config.mjs`ファイルの設定において`integrations`プロパティに関数を追加することで、ビルドプロセスや開発サーバーライフサイクルに独自の処理を追加することができます。[^4]
+
+[^4]: [Astro Integration API | Docs](https://docs.astro.build/ja/reference/integrations-reference/)
+
+```ts インテグレーションの記述例
+// 1. インテグレーションの作成
+export const customIntegration = (): AstroIntegration => ({
+  name: "custom-integration", // ログ出力時に使われる名前
+  hooks: {
+    // "フック名": コールバック関数
+    "astro:build:done": async (options: {
+      // ... 任意でオプションを付与
+    }) => {
+      // 処理の記述
+    },
+  },
+});
+
+// 2. インテグレーションを使用
+// astro.config.mjs
+import { customIntegration } from "..."
+
+export default defineConfig({
+  integrations: [customIntegration()],
+});
+```
+
+`hooks`オブジェクトには、処理を実行したいタイミング（フック名）をキーとし、実行するコールバック関数を値として設定します。このコールバック関数は、ビルド情報などを含む`options`オブジェクトを引数として受け取ることができます。
+
+今回は、ビルドの完了時にサブセット化を実行したいため、[`astro:build:done`](https://docs.astro.build/ja/reference/integrations-reference/#astrobuilddone)フックを使用します。作成したインテグレーション`fontOptimizer`を以下に示します。`options.assets`からビルドされたファイルの配列を取得できるので、そこからHTMLファイルのみを絞り込み、それらを`optimizeFonts`関数に渡してサブセット化を実行します。また、ビルドログが見やすくなるように[kleur](https://github.com/lukeed/kleur)でログに色をつけています。
+
+```ts fontOptimizer.ts（抜粋）
+// ...
+export const fontOptimizer = (): AstroIntegration => ({
+  name: "font-optimizer",
+  hooks: {
+    "astro:build:done": async (options: {
+      dir: URL;
+      assets: Map<string, URL[]>;
+      logger: AstroIntegrationLogger;
+    }) => {
+      const urls: URL[] = Array.from(options.assets.values()).flat();
+      const htmlFilePaths = urls
+        .map((url) => url.pathname)
+        .filter((pathname) => pathname.endsWith("html"));
+
+      if (htmlFilePaths.length === 0) {
+        options.logger.info("No html files. Font optimizer skipped.");
+        return;
+      }
+
+      console.log(kleur.bgGreen().black(" optimizing fonts ")); // ログ開始
+
+      for (const fontOptimizingOption of fontOptimizingOptions) {
+        const logInfo = await optimizeFonts(
+          htmlFilePaths,
+          fontOptimizingOption,
+          options.dir,
+        );
+        if (logInfo) {
+          const logMessage = [
+            kleur.gray("Optimized"),
+            logInfo.fontPath,
+            kleur.gray(
+              `(${kleur.yellow(fileKBSize(logInfo.prevFileSize))} kB ->`,
+            ),
+            kleur.green(fileKBSize(logInfo.optimizedFileSize)),
+            kleur.gray(`kB | ${logInfo.charsLength} chars)`),
+          ].join(" ");
+          options.logger.info(logMessage);
+        }
+      }
+
+      console.log(" "); // ログの空行
+    },
+  },
+});
+```
+
+実際にこの`fontOptimizer`インテグレーションを導入した様子を確認してみます。このサイトでは、主に3種類の日本語フォントを以下のルールで使い分けています。
+
+- Noto Sans JP bold(700)：太字（`<strong>`）
+- Zen Kaku Gothic New medium(500)：見出し（`<h1>`～`<h4>`）
+- Noto Sans JP regular(400)：それ以外の本文
+
+`astro build`コマンドでビルドをすると、ターミナルには下記のログが出力され、使用文字数に応じてファイルサイズが大幅に削減されていることが確認できます。
+
+![fontOptimizerの動作の様子](https://media.slimalized.dev/posts/build-astro-site/font-optimizing-log.avif)
+
+#### 読み込まれるフォントサイズの比較
+
+「[Markdownのサンプル](https://slimalized.dev/posts/markdown-sample)」ページの通信（開発者コンソールのNetworkタブ）を確認してみます。それぞれ読み込まれるフォントを比較すると、JetBrains Mono（あらかじめ静的にサブセット化している英字フォント。fontOptimizer適用外）のサイズは変わらず21.5kBですが、fontOptimizerでサブセット化した残りの2種はサイズが大きく削減されていることが確認できます（なお、このページには太字が登場しないので「Noto Sans JP bold」は読み込まれません）。
+
+![fontOptimizer適用前](https://media.slimalized.dev/posts/build-astro-site/font-size-before.avif)
+
+![fontOptimizer適用後](https://media.slimalized.dev/posts/build-astro-site/font-size-after.avif)
+
+#### Lighthouseのパフォーマンススコアの比較
+
+同じページのLighthouseタブのパフォーマンススコアを確認してみます。サブセット化を適用しただけですが、パフォーマンスが大幅に向上していることが分かります。
+
+![fontOptimizer適用前](https://media.slimalized.dev/posts/build-astro-site/font-optimizing-before-performance.avif)
+
+![fontOptimizer適用後](https://media.slimalized.dev/posts/build-astro-site/font-optimizing-after-performance.avif)
+
+参考：
+
+https://zenn.dev/kymok/articles/c85952bd74a2cf
+
+https://zenn.dev/kojimajunya/articles/c98ada8cc0773a
+
+## テーマの切り替え
+
+ヘッダーの右上の「to dark（to light）」ボタンをクリックすることで、サイトのテーマをライトモードとダークモードで切り替えることができます。
+
+@video[テーマの切り替え](https://media.slimalized.dev/posts/build-astro-site/theme.mp4)
+
+ダークテーマの実装には様々な方法があると思いますが、このサイトでは、ドキュメントのルート要素（`html`タグ）に`data-theme="light"`または`data-theme="dark"`という属性を付与し、それぞれの属性値に応じたCSS変数を適用して全体の配色を切り替える方法を採用しました。
+
+```css global.css（抜粋）
+:root[data-theme="light"] {
+  color-scheme: light; /* ブラウザのUI（スクロールバー等）をライトに */
+
+  /* ...（ライトモード用のカラー変数を定義） */
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark; /* ブラウザのUI（スクロールバー等）をダークに */
+
+  /* ...（ダークモード用のカラー変数を定義） */
+}
+```
+
+選択されたテーマの状態は、ブラウザの`localStorage`に`site-theme`というキーで保管しています。Reactからテーマ情報を利用するために、`useTheme`というカスタムフックを作成して`localStorage`に保存されたテーマ情報を管理しています。このフックは以下の3つを提供します。
+
+- `theme`（`"light"` | `"dark"` | `"undefined"`）：現在のテーマ状態
+- `setTheme`（関数）：テーマを設定する
+- `toggleTheme`（関数）：現在とは逆のテーマに切り替える
+
+以下は`useTheme`の実装です。
+
+```ts useTheme.ts
+import { useSyncExternalStore } from "react";
+
+const themes = {
+  dark: true,
+  light: true,
+  undefined: true,
+} as const satisfies Record<string, true>;
+
+type Theme = keyof typeof themes;
+
+const isTheme = (value: string): value is Theme => {
+  return value in themes;
+};
+
+const EVENT_THEME_STORAGE_CHANGE = "themeStorageChange";
+const THEME_KEY = "site-theme";
+
+const subscribe = (onChange: () => void) => {
+  window.addEventListener(EVENT_THEME_STORAGE_CHANGE, onChange);
+  return () => window.removeEventListener(EVENT_THEME_STORAGE_CHANGE, onChange);
+};
+
+export const useTheme = (initialTheme: Theme = "undefined") => {
+  const setTheme = (theme: Theme) => {
+    window.localStorage.setItem(THEME_KEY, theme);
+    window.dispatchEvent(new Event(EVENT_THEME_STORAGE_CHANGE));
+  };
+
+  const toggleTheme = (theme: Theme) => {
+    if (theme === "undefined") return;
+    const toggledTheme: Theme = theme === "dark" ? "light" : "dark";
+    setTheme(toggledTheme);
+  };
+
+  const getTheme = () => {
+    try {
+      const theme = window.localStorage.getItem(THEME_KEY);
+      if (theme && isTheme(theme)) {
+        return theme;
+      }
+    } catch (error) {
+      console.error(
+        "[useTheme] Failed to get theme from local storage: ",
+        error,
+      );
+    }
+  };
+
+  const theme = useSyncExternalStore(
+    subscribe,
+    () => getTheme() ?? initialTheme,
+    () => initialTheme,
+  );
+
+  return { theme, setTheme, toggleTheme };
+};
+```
+
+`localStorage`はReactの管理外にある外部ストアであるため、値をコンポーネントから安全に購読し変更を検知してUIを再レンダリングするために、[useSyncExternalStore](https://ja.react.dev/reference/react/useSyncExternalStore)を使用しています。`useSyncExternalStore`は主に以下の3つの引数を取ります。
+
+1. `subscribe`（関数）：外部ストアを後続し、値が変化したときに、引数に渡したコールバック関数（`onChange`）を呼び出すロジックを定義する
+2. `getSnapshot`（関数）：現在のストアの値を取得する。ここでは、`localStorage`からテーマの値を取得する
+3. `getServerSnapshot`（関数）：クライアント側でのハイドレーションが完了する前に使用される初期値を返す。`localStorage`はクライアント側にしか存在しないため、ここでは初期状態である`"undefined"`を返す
+
+`useSyncExternalStore`はこれらを利用し、購読している値の変更に応じて返り値のスナップショットを更新し、UIを再レンダリングします。「`subscribe(() => getTheme())`が実行されて、イベント発火に応じた値の更新処理が登録される」+「更新に合わせてコンポーネントを再レンダリング」の動作が、内部で抽象化されて処理されるイメージです。これにより、`localStorage`の変更に追従して常に最新の`site-theme`の値を返してコンポーネントを適切に再レンダリングさせることができます。
+
+なお、`window.addEventListener("storage", ...)`と記述すると、`site-theme`の値の変更に関わらず`localStorage`の他の値が変更された場合もイベントが発火してしまいます。拡張機能の利用などで`localStorage`に他の値が保管されている場合があるため、独自の`EVENT_THEME_STORAGE_CHANGE`イベントを定義して発火タイミングを限定しています。
+
+また、再レンダー中に異なる`subscribe`関数が渡されると、新しく渡された`subscribe`関数を使ってストアに再購読してしまいます。そのため、`subscribe`関数はコンポーネントの外で宣言する必要があります。加えて、`subscribe`関数は、`useEffect`のクリーンアップ関数のように、購読を解除するための関数を返す必要があります。
+
+```ts useSyncExternalStore関連部分の抜粋
+const subscribe = (onChange: () => void) => {
+    window.addEventListener(EVENT_THEME_STORAGE_CHANGE, onChange);
+  return () => window.removeEventListener(EVENT_THEME_STORAGE_CHANGE, onChange);
+};
+
+// ...
+
+const setTheme = (theme: Theme) => {
+    window.localStorage.setItem(THEME_KEY, theme);
+    window.dispatchEvent(new Event(EVENT_THEME_STORAGE_CHANGE));
+};
+
+// ...
+
+const theme = useSyncExternalStore(
+    subscribe,
+    () => getTheme() ?? initialTheme,
+    () => initialTheme, // "undefined"
+);
+```
+
+次に、`useTheme`フックを利用してテーマを切り替えるボタンコンポーネントを実装します。具体的には、`useEffect`を用いて`site-theme`の変更を検知して`html`タグに`data-theme`属性を設定します。
+
+```tsx ToggleThemeButton.tsx
+import { useEffect } from "react";
+import { useTheme } from "../utils/hooks/useTheme";
+import styles from "./ToggleThemeButton.module.css";
+
+export const ToggleThemeButton = () => {
+  const { theme, toggleTheme } = useTheme();
+
+  useEffect(() => {
+    if (theme !== "undefined") {
+      window.document.documentElement.setAttribute("data-theme", theme);
+    }
+
+    return () => {
+      if (theme !== "undefined") {
+        window.document.documentElement.removeAttribute("data-theme");
+      }
+    };
+  }, [theme]);
+
+  return (
+    <button
+      type="button"
+      id={styles["toggle-theme-button"]}
+      aria-label={
+        theme === "dark" ? "Switch to light theme" : "Switch to dark theme"
+      }
+      data-theme={theme}
+      onClick={() => toggleTheme(theme)}
+    >
+      {theme !== "undefined" && (
+        <>
+          <span>to Dark</span>
+          <span>to Light</span>
+        </>
+      )}
+    </button>
+  );
+};
+```
+
+しかし、上記の実装では`useEffect`がコンポーネントのマウント後に実行されるため、`localStorage`に`"dark"`が保存されている場合に以下のような流れで一時的に画面のちらつきが発生してしまう場合があります。
+
+1. ブラウザがHTMLを読み込み、デフォルトのスタイル（ライトテーマ）で画面を描画
+2. Reactがハイドレーションを実行（画面はライトテーマのまま）
+3. useEffectが実行され、data-theme属性が"dark"に設定される（画面はライトテーマのまま）
+4. 画面がダークテーマに切り替わる（画面はダークテーマに変化）
+
+この1～3の間にライトテーマの状態で画面が一瞬表示されてしまうため、ちらつきが発生してしまいます。これを防ぐためには、useEffectが動作する前に`html`タグに`data-theme`属性を設定する必要があります。これを解決する方法の一つは、`head`タグ内にインラインの`script`タグを配置することです。このスクリプトはページの描画が始まる前に同期的に実行されるため、ちらつきを防ぐことができます。
+
+```astro baseLayout.astro（抜粋）
+{/* ... */}
+
+  <head>
+    {/* ... */}
+    <script is:inline>
+      {/* is:inlineディレクティブをつけると、ビルド時にAstroが処理をスキップしてくれるので、そのままHTMLにscriptをレンダリングできる */}
+      (function () {
+        // 1. まずlocalStorageからテーマを取得
+        const theme = localStorage.getItem("site-theme");
+        if (theme === "dark" || theme === "light") {
+          document.documentElement.setAttribute("data-theme", theme);
+        } else {
+          // 2. localStorageにない場合、OSの設定（prefers-color-scheme）を優先
+          const preferTheme = window.matchMedia("(prefers-color-scheme: dark)")
+            ? "dark"
+            : "light";
+          localStorage.setItem("site-theme", preferTheme);
+          document.documentElement.setAttribute("data-theme", preferTheme);
+        }
+      })();
+    </script>
+    {/* ... */}
+  </head>
+
+{/* ...  */}
+```
+
+## 記事の目次
+
+PCなどの画面幅が広いデバイス（1152px以上）で記事を閲覧する際に、画面左側に追従型の目次が表示されます。スクロールに合わせて、現在表示されているセクションが目次上でハイライトされます。
+
+@video[目次の様子](https://media.slimalized.dev/posts/build-astro-site/toc.mp4)
+
+### 目次を作成する
+
+Astroのコンテンツコレクション機能を使うと、含まれる見出しの情報を記事本文のレンダリング時に配列として取得できます。
+
+```astro
+---
+const { heading } = await render(entry);
+---
+```
+
+`heading`は以下の3つのプロパティを持ったオブジェクトの配列です。
+
+- `depth`（数値）: 見出しの深さ
+- `slug`（文字列）: 見出しのid
+- `text`（文字列）: 見出しに表示されるテキスト
+
+この配列を元に、まずは見出しの深さに応じて入れ子になった階層構造を持つ目次リスト（順序付きリスト）を生成します。生成のために、見出しの配列を受け取りネストされたリスト構造のコンポーネントを返す`CreateTableOfContentsList`関数を作成しました。
+
+```tsx CreateTableOfContentsList
+// 深さ2, 3, 4 の見出しのみ使用
+const depth = [2, 3, 4] as const;
+type Depth = (typeof depth)[number];
+
+const isValidDepth = (number: number): number is Depth => {
+  return depth.some((d) => d === number);
+};
+
+const CreateTableOfContentsList = (
+  headings: MarkdownHeading[],
+  baseDepth: Depth,
+  activeIds: Set<string>,
+  itemRefs: RefObject<Record<string, HTMLAnchorElement | null>>,
+) => {
+  const toc: JSX.Element[] = [];
+  for (const [index, heading] of headings.entries()) {
+    const { depth: currentDepth, slug, text } = heading;
+
+    if (!isValidDepth(currentDepth)) {
+      console.error("[TableOfContents] Invalid heading depth:", currentDepth);
+      continue;
+    }
+
+    // 基準の深さよりも浅い見出しに衝突したら、見出し作成を中断
+    if (currentDepth < baseDepth) break;
+
+    // 基準の深さと同じ深さの見出しに衝突したら、要素を作成
+    if (currentDepth === baseDepth) {
+      const nextIndex = index + 1;
+      const nextDepth: number | undefined = headings[nextIndex]?.depth;
+      toc.push(
+        <li key={slug}>
+          <a
+            href={`#${slug}`}
+            ref={(AnchorElement) => {
+              itemRefs.current[slug] = AnchorElement;
+            }}
+            data-is-active={activeIds?.has(slug) ? "true" : undefined}
+          >
+            {text}
+          </a>
+          // 次の見出しが基準の深さよりも深ければ、その深さを基準に再帰的に関数を呼び出す
+          {isValidDepth(nextDepth) &&
+            nextDepth > baseDepth &&
+            CreateTableOfContentsList(
+              headings.slice(nextIndex),
+              nextDepth,
+              activeIds,
+              itemRefs,
+            )}
+        </li>,
+      );
+    }
+
+    // 基準の深さよりも深い見出しに衝突したら、何も行わない（continue）
+  }
+
+  return toc.length > 0 ? (
+    <ol className={styles[`ol-depth-${baseDepth}`]}>{[...toc]}</ol>
+  ) : null;
+};
+```
+
+この関数の基本的な考え方は、「特定の深さ（`baseDepth`）の見出しを処理し、それより深い見出しが現れたら、その深さを新しい基準として再帰的に関数を呼び出す」というものです。`heading`配列を先頭から順に見ていき、`baseDepth`に与えた深さと現在の要素の深さを比較して、以下のように処理を分岐します。
+
+- 「基準の深さ」と同じ深さの見出し：その見出しに対応する`li`要素を生成
+- 「基準の深さ」よりも浅い見出し：break
+- 「基準の深さ」よりも深い見出し：何も行わず、次に進む
+
+ただし、『「基準の深さ」と同じ深さの見出し』については、次の要素が「基準の深さ」よりも深い見出しであれば、その深さを基準として再帰的に関数を呼び出します。
+
+例えば、`h2, h3, h3, h4, h2, h3, h3`の順で見出しがある場合の処理は以下の図のように進行します。
+
+![CreateTableOfContentsListの動作イメージ](https://media.slimalized.dev/posts/build-astro-site/create-table-of-contents-list.avif)
+
+### スクロールに応じて目次をハイライトする
+
+次に、[交差オブザーバAPI](https://developer.mozilla.org/ja/docs/Web/API/Intersection_Observer_API)を利用し、画面内に表示されている項目に対応した見出しを強調して表示しています。このAPIを使用することで、交差判定のための領域（ルート要素）に判定対象の要素（ターゲット要素）が交差する際に、コールバックを呼び出すことができます。基本的な設定は以下の通りです。
+
+- 交差領域（ルート要素）：画面全体。`observerOptions`で指定
+- 監視対象（ターゲット要素）：記事本文中の各見出し要素（`h2`タグや`h3`タグなど）
+- コールバック処理：目次の対応する見出しを強調する処理
+
+交差しているターゲット要素（`entry`）は`isIntersecting`プロパティの値が`true`になるため、これを用いて画面内にある見出し要素の`id`を`useState`で管理し、それらに対応した目次の`li`要素に強調用のクラスを付与して要素を強調しています。なお、画面内に見出しが一つも表示されない瞬間はハイライトが途切れてしまうため、スクロール方向に応じてフォールバックでハイライトするようにしています。
+
+- 基本処理：`entry.isIntersecting`が`true`になった見出しの`id`を、アクティブな`id`のセット(`activeIds`)に追加（`false`になったら削除）
+- フォールバック：画面内（交差領域）に見出しが一つもない状態になった場合、スクロール方向に応じて見出しをハイライト
+  - 下スクロール時：画面内から消えたばかりの見出し（`entries[0]`）の`id`を引き続きハイライト
+  - 上スクロール時：画面内から消えた見出しの、一つ前の見出しのIDをハイライト
+
+```tsx TableOfContents.tsx（抜粋）
+// ... (observerOptionsの設定)
+// ...
+  useEffect(() => {
+    // ... (見出し要素のDOMを取得)
+    
+    const observer = new IntersectionObserver((entries) => {
+      setActiveIds((prev) => {
+        const next: Set<string> = new Set(/* ... */);
+
+        // entry.isIntersectingで画面内に見出しがあるかを判定し、強調するべき見出し要素を抽出する
+        for (const entry of entries) {
+          const id = entry.target.id;
+          if (!id) continue;
+          if (entry.isIntersecting) {
+            next.add(id);
+          } else {
+            next.delete(id);
+          }
+        }
+
+        // ビューポートに1つも見出し要素が無ければ、現在の項目の見出しのみを強調する
+        if (
+          next.size === 0 &&
+          entries.length === 1 &&
+          !entries[0].isIntersecting
+        ) {
+          scrollDirectionRef.current =
+            entries[0].boundingClientRect.y < 0 ? "down" : "up";
+          if (scrollDirectionRef.current === "down") {
+            return new Set([entries[0].target.id]);
+          }
+          if (scrollDirectionRef.current === "up") {
+            // ... (一つ前の見出しIDを取得してセット)
+        }
+
+        // Stateの更新
+        if (prev.size !== next.size || [...prev].some((id) => !next.has(id))) {
+          return next;
+        }
+        return prev;
+      });
+    }, observerOptions);
+
+    // 見出しを監視対象として登録
+    for (const headingElement of headingElementsRef.current) {
+      observer.observe(headingElement);
+    }
+
+    return () => observer.disconnect();
+  }, []);
+// ...
+```
+
+## R2での画像管理
+
+ローカルで画像や動画などのメディアを管理すると、その量に比例してサイトのビルド時間が長引いてしまうため、開発体験を損なう一因となります。可能であれば、これらのメディアはリモートで管理するのが理想的です。そこで、本サイトでは画像や動画などのメディアを[Cloudflare R2](https://www.cloudflare.com/ja-jp/developer-platform/products/r2/)で管理、配信するよにしました。一連の作業はコマンドラインから実行できるようスクリプト化しており、大まかな流れは以下の通りです。
+
+1. ローカルでの画像の保持：`media/`配下に画像や動画を管理し、記事執筆時はローカルパスで指定
+2. 画像の変換と最適化：画像を`PNG`などから高圧縮な`AVIF`形式に変換。同時に、後述のレスポンシブ対応のため、複数の解像度の画像を生成
+3. R2へのアップロード：画像や動画などのメディアをCloudflare R2にアップロード
+4. MDX内のパスを変換：記事ファイル（MDX）内のパスをローカルパスからR2の配信URLに変換
+
+`media/`ディレクトリは`src/`配下でも`public/`配下でもないため、Astroのビルドプロセスには含まれず、ビルド時間には影響しません。ただし、ビルド結果のHTMLからは参照できないため、このディレクトリは主にR2にアップロードする前の画像の一時保管所として利用しています。ローカルに画像を置く最大のメリットは、執筆時にエディタのパス自動補完が効くことです。「記事執筆中は`media/`を参照にメディアを配置して、最後にパスをR2の配信URLに変換する」という方法にすることで、ビルド時間を短縮しつつ、自動補完の利便性を活かしてメディアを利用することができます。
+
+### 画像をAVIF形式に変換する
+
+まず、R2にアップロードする前に画像を`AVIF`形式に変換します。`AVIF`は比較的新しい画像フォーマットで、画質を保ったまま高い圧縮率を誇ります。変換処理には数秒かかりますが、一度実行すれば済むためビルドごとに時間がかかるのに比べれば開発の負担は少なくなります。
+
+この変換処理は`mediaConverter.ts`にまとめられており、`media/`配下で指定したディレクトリ内の画像から、それらを`AVIF`形式に変換した画像を生成します。`--delete-original`フラグを与えて実行すると、合わせて変換前の元の画像を削除します。
+
+```shell usage
+bun mediaConverter.ts {posts|works}/{id} [--delete-original]
+```
+
+スクリプトでは最初に、`fs.readdir`を用いて指定されたディレクトリから画像ファイルの一覧を取得します。このとき、変換が不要な`AVIF`形式や`SVG`形式のファイルは、あらかじめ除外しておきます。
+
+```ts 対象ファイルの取得（mediaConverter.tsより抜粋）
+const validExts = [".png", ".jpg", ".jpeg", ".webp"];
+
+// 対象の拡張子であるかを返す関数
+export const isValidImageSource = (fileName: string) => {
+  const lower = fileName.toLowerCase();
+  const isAVIF = lower.endsWith(".avif");
+  const isSVG = lower.endsWith(".svg");
+  const isImage =
+    isAVIF || isSVG || validExts.some((ext) => lower.endsWith(ext));
+  return { isImage, isAVIF, isSVG };
+};
+// ...
+  const dirPath = path.resolve(__dirname, "../../../media", dirName);
+
+  let imageEntries: Dirent[];
+  // ...
+    // 対象のファイルのみに絞り込み
+    imageEntries = (await fs.readdir(dirPath, { withFileTypes: true })).filter(
+      (entry) => {
+        if (!entry.isFile()) return false;
+        const { isImage, isAVIF, isSVG } = isValidImageSource(entry.name);
+        return isImage && !isAVIF && !isSVG;
+      },
+    );
+  // ...
+```
+
+次に、対象の各画像を[sharp](https://github.com/lovell/sharp)を用いて`AVIF`形式に変換します。また、後述する「[#画面幅に応じて画像の解像度を切り替える](#画面幅に応じて画像の解像度を切り替える)」のために、横幅`400px`（`*_small.avif`）と横幅`720px`（`*_large.avif`）のバージョンも同時に生成しておきます。なお、元の画像のサイズが十分に小さい場合は別サイズの画像生成をスキップします。変換処理の`convertToAvif`関数は以下の通りです。
+
+```ts convertToAvif（mediaConverter.tsより抜粋）
+export const imageSizes = {
+  small: 400, 
+  large: 720, 
+  original: 0, // オリジナルサイズ（リサイズなしを示すため0を指定）
+} as const;
+type SizeLabel = keyof typeof imageSizes;
+// ...
+// filePathの画像からsizeLabelに指定したサイズの`.avif`に変換した画像を生成する
+const convertToAvif = async (filePath: string, sizeLabel: SizeLabel) => {
+  const { base, name } = path.parse(filePath);
+
+  const boundaryWidth = imageSizes[sizeLabel];
+  // 1. 元の横幅を取得
+  let originalWidth: number | undefined;
+  try {
+    originalWidth = (await sharp(filePath).metadata()).width;
+  } catch (error) {
+    throw new Error(`Failed to get metadata for ${base}: ${error}`);
+  }
+  if (!originalWidth) {
+    throw new Error(`Failed to get width for ${base}`);
+  }
+
+  // 2. 元の横幅が指定のサイズよりも小さければ、画像の生成をスキップ
+  if (originalWidth <= boundaryWidth) {
+    // ...
+    return;
+  }
+
+  let avifBuffer: Buffer;
+  try {
+    // 3. .avif画像の生成
+    const sharpInstance = sharp(filePath);
+    if (sizeLabel !== "original") {
+      sharpInstance.resize({ width: boundaryWidth });
+    }
+    avifBuffer = await sharpInstance.avif({ quality: 80 }).toBuffer();
+  } catch (error) {
+    throw new Error(`Failed to convert ${base} to AVIF: ${error}`);
+  }
+
+  // 4. ファイルを書き込み
+  const outputFileName =
+    sizeLabel !== "original" ? `${name}_${sizeLabel}.avif` : `${name}.avif`;
+  const outputFilePath = path.join(path.dirname(filePath), outputFileName);
+  try {
+    await fs.writeFile(outputFilePath, avifBuffer);
+     // ...
+  } catch (error) {
+    throw new Error(`Failed to write ${outputFileName}: ${error}`);
+  }
+};
+```
+
+スクリプトを実行した様子は以下の通りです。
+
+![mediaConverterの実行の様子](https://media.slimalized.dev/posts/build-astro-site/mediaConverter.avif)
+
+### R2に画像をアップロードする
+
+次に、生成した画像ファイルをCloudflare R2にアップロードします。R2は[Amazon S3](https://aws.amazon.com/jp/s3/)互換であるため、[@aws-sdk/client-s3（Node.js上でAmazon S3を操作するためのAWS SDK）を用いてアップロードする方法](https://developers.cloudflare.com/r2/examples/aws/aws-sdk-js-v3/)を用いて実装しました。[@aws-sdk/client-s3](https://github.com/aws/aws-sdk-js-v3)を使った基本的なアップロード処理は以下のようになります。[^5]なお、事前にCloudflareにログインし、[R2でプロジェクトのバケットを作成](https://developers.cloudflare.com/r2/get-started/#2-create-a-bucket)しておく必要があります。
+
+[^5]: アップロード時の`key`に`/`を含めると、R2のダッシュボード上でフォルダとして階層化してリソースを表示できるようになるので便利です。
+
+```ts
+import {
+ ListObjectsV2Command,
+ PutObjectCommand,
+ S3Client,
+} from "@aws-sdk/client-s3";
+
+// .env から認証に必要なシークレット情報を読み込み
+const ACCOUNT_ID = process.env.ACCOUNT_ID;
+const ACCESS_KEY_ID = process.env.ACCESS_KEY_ID;
+const SECRET_ACCESS_KEY = process.env.SECRET_ACCESS_KEY;
+const BUCKET_NAME = process.env.BUCKET_NAME;
+
+// R2のエンドポイントを指定してS3クライアントを生成
+const r2Client = new S3Client({
+  region: "auto",
+  endpoint: `https://${ACCOUNT_ID}.r2.cloudflarestorage.com`,
+  credentials: {
+    accessKeyId: ACCESS_KEY_ID,
+    secretAccessKey: SECRET_ACCESS_KEY,
+  },
+});
+
+// リソースオブジェクトのアップロード
+const uploadParams = {
+  Bucket: BUCKET_NAME,
+  Key: "posts/sample/hello.avif" // 参照時の名前になる。`/`を含めて階層化可能
+  // この場合、`https://${ACCOUNT_ID}.r2.cloudflarestorage.com/posts/sample/hello.avif`になる
+  Body: await fs.readFile("../media/posts/sample/hello.avif"), // アップロードするファイル
+  ContentType: "image/avif",
+};
+await r2Client.send(new PutObjectCommand(uploadParams));
+
+// リソースオブジェクトの取得
+const { Contents } = await r2Client.send(
+  new ListObjectsV2Command({
+    Bucket: BUCKET_NAME,
+    Prefix: `posts/`, // 特定のプレフィクスを持つオブジェクトを取得
+  }),
+);
+```
+
+`ACCOUNT_ID`などの機密情報は、プロジェクトのルートに置いた`.env`ファイルで管理しています。各値の詳細は以下の通りです。
+
+- `ACCOUNT_ID`：CloudflareアカウントのID
+- `ACCESS_KEY_ID`：R2のアクセスキーID。r2ダッシュボードの「APIトークンの管理」からトークンを作成して取得[^6]
+- `SECRET_ACCESS_KEY`：R2のシークレットアクセスキー（同上の方法で取得）
+- `BUCKET_NAME`：プロジェクトのバケット名
+
+[^6]: [Authentication - Cloudflare R2 docs](https://developers.cloudflare.com/r2/api/tokens/)
+
+アップロード処理は`r2Uploader.ts`にまとめられており、`media/`配下で指定したディレクトリ内の動画や画像を、R2にまとめてアップロードすることができます。デフォルトではアップロード済みファイルの再アップロードをスキップしますが、`--update-all` フラグを与えて実行するとすべてのファイルを再びアップロードします。
+
+```shell usage
+bun r2Uploader.ts {posts|works}/{id} [--update-all]
+```
+
+なお、R2のダッシュボードから、配信URLをカスタムドメイン（cloudflare registerで登録したもの）に変更することができます。変更すると、アクセス制御や[Cloudflare Cache](https://developers.cloudflare.com/cache/)によるキャッシュなどの機能が使えるようになるので、カスタムドメインの利用をオススメします。自分は`media.slimalized.dev`を登録しています。なお、カスタムドメインは読み取り専用であり、S3互換APIはS3エンドポイント（`r2.cloudflarestorage.com`のサブドメイン）経由でのみ利用可能です。そのため、上述のS3Clientインスタンス作成時の`endpoint`プロパティは、カスタムドメインを利用するかに関わらず、`r2.cloudflarestorage.com`のサブドメインを指定する必要があるようです。[^7]
+
+[^7]: [S3 URL access for R2 with Custom Domain - Developers / Storage - Cloudflare Community](https://community.cloudflare.com/t/s3-url-access-for-r2-with-custom-domain/646709)
+
+スクリプトを実行した様子は以下の通りです。アップロードしたファイルは`https://media.slimalized.dev/{key}`からアクセスできるようになります。
+
+![r2Uploaderの実行の様子](https://media.slimalized.dev/posts/build-astro-site/r2Uploader.avif)
+
+### MDX内のパスを置き換える
+
+最後に、執筆中の記事で使用されているローカル画像のパス（`media/...`）を、アップロードしたリモート画像のURL（`https://media.slimalized.dev/...`）に変換します。この処理は`imageSrcReplacer.ts`にまとめられており、内部ではシンプルに`fs.readFile`したMDXファイルを正規表現で文字列置換しています。
+
+```shell usage
+bun imageSrcReplacer.ts {posts|works}/{mdx file name} 
+```
+
+### 画面幅に応じて画像の解像度を切り替える
+
+Webサイトの表示速度に関する指標の一つに、[LCP（Largest Contentful Paint）](https://web.dev/articles/lcp?hl=ja)というものがあります。これは、ユーザがページを読み込み始めてから画面上で最も大きなコンテンツ（画像、動画、テキストブロックなど）が表示されるまでの時間を示すもので、特に画像などの重い要素の読み込みが大きく影響します。例えば、ユーザーの画面サイズに対して過度に大きな画像を配信することは、LCPの悪化に直結します。この問題に対処するため、ユーザの画面幅に応じて最適な解像度の画像を配信するレスポンシブイメージの手法を取り入れました。[`picture`](https://developer.mozilla.org/ja/docs/Web/HTML/Reference/Elements/picture)タグを用いることで、この切り替えを宣言的に実装することができます。
+
+実装した`OptimizedImage.astro`では、AVIF変換時に生成した3つのサイズの画像（`original`, `large`, `small`）を利用し、以下のように画像を切り替えます（オリジナル画像の元々の幅が指定サイズより小さい場合は、オリジナル画像がそのまま使用されます）。
+
+- 画面幅が`400px`以下の場合：`small`サイズの画像を読み込む
+- 画面幅が`400px`より大きい場合：`large`サイズの画像を読み込む
+- 画像をクリックしたとき：`original`サイズの画像を新しいタブで開いて表示
+
+```astro OptimizedImage.astro（抜粋）
+---
+import sharp from "sharp";
+import { imageSizes } from "../../utils/scripts/mediaConverter";
+
+interface Props { /*...*/ }
+const { alt, src: _src, loading = "lazy" } = Astro.props;
+
+// 元のURLからsmall版、large版のURLを生成
+const extRegex = /\.(avif|svg)$/;
+const src = {
+  original: _src, // 例：https://media.slimalized.dev/posts/sample/hello.avif
+  small: _src.replace(extRegex, "_small.$1"), // 例：https://media.slimalized.dev/posts/sample/hello_small.avif
+  large: _src.replace(extRegex, "_large.$1"), // 例：https://media.slimalized.dev/posts/sample/hello_large.avif
+};
+
+const res = await fetch(src.original);
+const buffer = Buffer.from(await res.arrayBuffer());
+const metadata = await sharp(buffer).metadata();
+// オリジナル画像のサイズを取得し、small版、large版の画像widthを決定（「オリジナルのwidth」と「既定値（small: 400px, large: 720px）」のうち小さい方の数値）
+const { width: originalWidth, height: originalHeight } = metadata;
+const isValid = originalWidth !== undefined && originalHeight !== undefined;
+const smallWidth = isValid ? Math.min(imageSizes.small, originalWidth) : undefined;
+const largeWidth = isValid ? Math.min(imageSizes.large, originalWidth) : undefined;
+---
+<!-- ... -->
+  <picture>
+    {/* 画面の横幅が400px以下の場合はsmallサイズの画像を読み込む */}
+    <source
+      media={`(max-width: ${imageSizes.small}px)`}
+      srcset={imageSizes.small >= originalWidth ? src.original : src.small}
+      width={smallWidth}
+      height={Math.floor(((smallWidth as number) * originalHeight) / originalWidth)}
+    />
+    {/* 画面の横幅が400pxより大きい場合はlargeサイズの画像を読み込む */}
+    <img
+      src={imageSizes.large >= originalWidth ? src.original : src.large}
+      alt={alt}
+      width={largeWidth}
+      {/* オリジナル画像の縦横幅の比率から、画像の高さを指定 */}
+      height={Math.floor(((largeWidth as number) * originalHeight) / originalWidth)}
+      loading={loading}
+    />
+  </picture>
+<!-- ... -->
+```
+
+実際にパソコンなどのブラウザでページを開き、横幅を変更して画像を右クリックして新しいタブで開くと、画面幅に応じて画像の解像度が変化する様子が確認できると思います。
+
+また、「[Markdownのサンプル#画像](https://slimalized.dev/posts/markdown-sample#画像)」のLighthouseのパフォーマンススコアを確認してみます。横幅1200pxのデスクトップ環境で、レスポンシブイメージ適用前（オリジナル解像度の画像を読み込み）と適用後（largeサイズの画像を読み込み）のパフォーマンスを比較します。計測環境の影響でスコアに大きな差は見られませんでしたが、Largest Contentful Paintの値に着目してみると時間が短縮されていることがわかります。
+
+![レスポンシブイメージ適用前（originalの画像を使用）。LCPは2.1s](https://media.slimalized.dev/posts/build-astro-site/image-optimizing-before-performance.avif)
+
+![レスポンシブイメージ適用後（largeの画像を使用）。LCPは0.8s](https://media.slimalized.dev/posts/build-astro-site/image-optimizing-after-performance.avif)
+
+## 動的OGPの作成
+
+各記事のURLの末尾に`/og-image.png`を追記することで、その記事のタイトルや公開日が入ったOGP画像を確認することができます。例えば、このページのOGP画像は以下のURLから確認できます。
+
+```plaintext og url
+https://slimalized.dev/posts/build-astro-site/og-image.png
+```
+
+この機能は、Astroの[カスタムエンドポイント](https://docs.astro.build/ja/guides/endpoints/)を利用して実装しています。Astroでは、`pages/`配下に`.png.ts`や`.json.ts`といった形式でファイルを作成することで、特定のパスに対してリクエストに応答するエンドポイントを定義できます。今回は`src/pages/posts/[id]/og-image.png.ts`というファイルを作成し、各記事に対応するOGP画像をビルド時に生成する静的エンドポイントとしました。
+
+```ts og-image.png.ts
+import { getCollection } from "astro:content";
+import type { APIRoute } from "astro";
+import { generateOgpImage } from "../../../components/OgpImage";
+import { formatDate } from "../../../utils/formatDate";
+
+export const getStaticPaths = async () => {
+  const posts = await getCollection("posts");
+    return posts.map((post) => ({
+    params: {
+      id: post.id,
+    },
+    props: {
+      title: post.data.title,
+      date: post.data.publishedDate,
+    },
+  }));
+};
+
+export const GET: APIRoute = async ({ params, props }) => {
+  if (!params.id) {
+    return new Response(
+      JSON.stringify({
+        error: "Post ID is required.",
+      }),
+    { status: 400 },
+    );
+  }
+  const body = await generateOgpImage(props.title, formatDate(props.date));
+
+  return new Response(body, {
+    headers: {
+      "Content-Type": "image/png",
+    },
+    status: 200,
+  });
+};
+```
+
+Astroで動的ルーティングをする際は、[`getStaticPaths`](https://docs.astro.build/ja/reference/routing-reference/#getstaticpaths)関数を用いて、生成対象となるページのパスを事前に配列としてエクスポートする必要があります。このとき、`params`プロパティでパスのパラメータを指定すると同時に`props`プロパティを使うことで、各ページのエンドポイントに任意のデータを渡すことができます。今回はOGP画像の生成に記事のタイトルと公開日が必要なため、これらを`props`経由で渡しています。
+
+エンドポイント本体 (`GET`関数) は、受け取った`props`を元にOGP画像を生成して返すだけです。OGP画像の生成では、まず[satori](https://github.com/vercel/satori)を用いて`JSX`を`SVG`形式に変換し、それを`sharp`を用いてPNGに変換しています。OGP画像を生成する`generateOgImage`関数は以下の通りです。
+
+```tsx generateOgImage（OgImage.tsxより抜粋）
+import fs from "node:fs/promises";
+import path from "node:path";
+import satori from "satori";
+import sharp from "sharp";
+
+const getFont = async (
+  fontFilePath = "src/assets/zen-kaku-gothic-new_medium_500.ttf",
+) => {
+  try {
+    return await fs.readFile(path.resolve(process.cwd(), fontFilePath));
+  } catch (error) {
+    console.error("Error reading font file:", error);
+    throw new Error("Failed to load font.");
+  }
+};
+
+export const generateOgpImage = async (title: string, date: string) => {
+  const bgPath = path.resolve(process.cwd(), "src/assets/og-image-bg.png");
+  const bgBuffer = await fs.readFile(bgPath);
+  const bgSrc = `data:image/png;base64,${bgBuffer.toString("base64")}`;
+
+  // ...
+  const svg = await satori(
+    <div>
+      {/*背景画像*/}
+      <img src={bgSrc} width={1200} height={630} {/*...*/} />
+      {/* タイトルや公開日などの要素を記述 */}
+    </div>,
+    {
+      width: 1200,
+      height: 630,
+      fonts: [
+        {
+          name: "Zen Kaku Gothic New",
+          data: await getFont(),
+          style: "normal",
+          weight: 500,
+        },
+      ],
+    },
+  );
+
+  return await sharp(Buffer.from(svg)).png().toBuffer();
+};
+```
+
+OG画像の背景は、`assets/`配下に置いた画像を読み込む形式にしています。`fs.readFile`でバッファに読み込みBase64方式でエンコードした上で、`data:image/png;base64,${エンコードした文字列}`という形式で`src`に渡します。[^8] また、satoriは`WOFF2`形式のフォントファイルに対応していないため、別途`TTF`形式のフォントファイルをローカルに配置し、それを読み込むようにしています。
+
+[^8]: [vercel/satori: Enlightened library to convert HTML and CSS to SVG](https://github.com/vercel/satori?tab=readme-ov-file#images)
+
+なお、OGP画像のレイアウトを試作する際は[Vercel OG Image Playground](https://satori-playground.vercel.app/)が便利です。ただし、素のHTML（`HTML (Native)`タブから確認可能）と生成されるSVG画像（`SVG (Satori)`タブから確認可能）には結構な差があるので、`SVG (Satori)`タブを確認しながらデザインするのが良いでしょう。
+
+最後に、生成したOGP画像のURL（ページのパス + `/og-image.png`）をレイアウトファイルで`meta`タグに設定します。
+
+```astro metaタグの指定例
+<meta property="og:image" content={new URL("/posts/hello/sample/og-image.png", Astro.url)} />
+```
+
+## 終わりに
+
+本記事では、Astroを用いたサイト作成の過程で実装した機能についていくつか紹介をしました。特に、remarkプラグインによるMarkdownの拡張や、フォントのサブセット化、Cloudflare R2によるメディアコンテンツの配信などは、シンプルなサイトを構築する上で非常に有用であると感しています。
+
+今後も記事を執筆しながら、さらなる改善や新機能の追加に取り組んでいきたいと思います。[^10]
+
+[^10]: videoやdetailsのコンポーネント実装や、ヘッダーの実装など、まだ書けていない部分もあります。
