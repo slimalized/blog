@@ -37,6 +37,7 @@ export const VideoPlayer = ({ src }: { src: string }) => {
 				className={styles["video-control-button"]}
 				type="button"
 				onClick={handleClick}
+				aria-label="video play/pause"
 			>
 				<div className={styles["icon-wrapper"]}>
 					<Pause />
