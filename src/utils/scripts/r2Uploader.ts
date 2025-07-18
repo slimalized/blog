@@ -18,13 +18,14 @@ const BUCKET_NAME = process.env.BUCKET_NAME ?? "";
 const handleR2Upload = async (dirName: string, shouldUpdate: boolean) => {
 	const dirPath = path.resolve(__dirname, "../../../media", dirName);
 
-	let imageEntries: Dirent[];
+	let mediaEntries: Dirent[];
 	try {
-		imageEntries = (await fs.readdir(dirPath, { withFileTypes: true })).filter(
+		mediaEntries = (await fs.readdir(dirPath, { withFileTypes: true })).filter(
 			(entry) => {
 				if (!entry.isFile()) return false;
 				const { isAVIF, isSVG } = isValidImageSource(entry.name);
-				return isAVIF || isSVG;
+				const isVideo = entry.name.endsWith("mp4");
+				return isAVIF || isSVG || isVideo;
 			},
 		);
 	} catch (error) {
@@ -32,7 +33,7 @@ const handleR2Upload = async (dirName: string, shouldUpdate: boolean) => {
 		process.exit(1);
 	}
 
-	if (imageEntries.length === 0) {
+	if (mediaEntries.length === 0) {
 		console.log(
 			kleur.yellow(
 				`Nothing to upload: No .avif or .svg files found in media/${dirName}`,
@@ -63,17 +64,18 @@ const handleR2Upload = async (dirName: string, shouldUpdate: boolean) => {
 		Contents?.map((content) => content.Key).filter(Boolean) || [],
 	);
 
-	for (const [index, entry] of imageEntries.entries()) {
+	for (const [index, entry] of mediaEntries.entries()) {
 		const filePath = path.join(dirPath, entry.name);
 		console.log(
-			kleur.gray(`+ (${index + 1}/${imageEntries.length}) ${entry.name}`),
+			kleur.gray(`+ (${index + 1}/${mediaEntries.length}) ${entry.name}`),
 		);
 
 		const { isSVG } = isValidImageSource(entry.name);
+		const isVideo = entry.name.endsWith("mp4");
 
-		let imageBuffer: Buffer;
+		let mediaBuffer: Buffer;
 		try {
-			imageBuffer = await fs.readFile(filePath);
+			mediaBuffer = await fs.readFile(filePath);
 		} catch (error) {
 			console.error(`Failed to read file ${entry.name}:`, error);
 			continue;
@@ -94,8 +96,12 @@ const handleR2Upload = async (dirName: string, shouldUpdate: boolean) => {
 		const uploadParams = {
 			Bucket: BUCKET_NAME,
 			Key: key,
-			Body: imageBuffer,
-			ContentType: isSVG ? "image/svg+xml" : "image/avif",
+			Body: mediaBuffer,
+			ContentType: isSVG
+				? "image/svg+xml"
+				: isVideo
+					? "video/mp4"
+					: "image/avif",
 		};
 		try {
 			await r2Client.send(new PutObjectCommand(uploadParams));

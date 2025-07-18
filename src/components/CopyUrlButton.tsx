@@ -6,26 +6,24 @@ export const CopyUrlButton = ({ href }: { href: string }) => {
 	const { isCopied, copy } = useCopy(href);
 
 	return (
-		<>
-			<button
-				type="button"
-				className={styles["copy-button"]}
-				data-is-copied={isCopied}
-				aria-label="copy url button"
-				onClick={async () => {
-					await copy(); // Copy url.
-				}}
-			>
-				<span data-is-copied={isCopied}>URLをコピー</span>
-				<span data-is-copied={isCopied}>
-					しました
-					<Check />
-				</span>
-				<span data-is-copied={isCopied}>
-					する
-					<Copy />
-				</span>
-			</button>
-		</>
+		<button
+			type="button"
+			className={styles["copy-button"]}
+			data-is-copied={isCopied}
+			aria-label="copy url button"
+			onClick={async () => {
+				await copy(); // Copy url.
+			}}
+		>
+			<span data-is-copied={isCopied}>URLをコピー</span>
+			<span data-is-copied={isCopied}>
+				しました
+				<Check />
+			</span>
+			<span data-is-copied={isCopied}>
+				する
+				<Copy />
+			</span>
+		</button>
 	);
 };

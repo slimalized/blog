@@ -1,8 +1,8 @@
 #!/usr/bin/env bun
 
-import { $, echo } from "zx";
-import { input, confirm } from "@inquirer/prompts";
+import { confirm, input } from "@inquirer/prompts";
 import kleur from "kleur";
+import { $, echo } from "zx";
 import { formatDate } from "../formatDate";
 
 // Check if the path already exists.

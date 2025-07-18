@@ -73,7 +73,7 @@ const extractTwitterQuote = (_html: string, tweetUrlString: string) => {
 	const dom = new JSDOM(_html.split("\n")[0]);
 	const { document } = dom.window;
 
-	let postedDate: Date | undefined = undefined;
+	let postedDate: Date | undefined;
 	const aTags = document.getElementsByTagName("a");
 	for (const aTag of aTags) {
 		// 2. Set attributes to open a link as an external link.

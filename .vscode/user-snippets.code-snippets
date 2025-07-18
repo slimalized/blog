@@ -1,0 +1,8 @@
+{
+	"MDX React Comment": {
+		"scope": "",
+		"prefix": "mdxcomment",
+		"body": ["{/*$TM_SELECTED_TEXT$1*/}"],
+		"description": "mdx format comment"
+	}
+}

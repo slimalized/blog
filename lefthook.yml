@@ -8,7 +8,7 @@ pre-commit:
   parallel: true
   jobs:
     - name: Biome
-      glob: "*.{js,jsx,ts,tsx,json,yml,astro}"
+      glob: "*.{js,jsx,ts,tsx,json,yml}"
       run: bun run biome {staged_files}
       stage_fixed: true
       skip:

@@ -82,6 +82,7 @@ export const isSingleLinkParagraph = (
 ) => {
 	return (
 		parent?.type !== "listItem" &&
+		parent?.type !== "footnoteDefinition" &&
 		node.children.length === 1 &&
 		node.children[0].type === "link"
 	);

@@ -3,9 +3,9 @@ import path from "node:path";
 import kleur from "kleur";
 import { site } from "../consts";
 
-// Matches `![<caption>](/media/<posts|works>/<id>/<file>)` or `![](/media/<posts|works>/<id>/<file>)` with optional whitespace at the start and end
+// Matches ![<caption>](...) or @video[<caption>](...) with /media/<type>/<id>/<file> (with optional spaces at the start and end)
 const markdownImageSourceRegex =
-	/^\s*!\[(?<caption>[^\]]*)\]\(\/media\/(?<contentType>[^)\/\s]+)\/(?<id>[^)\/\s]+)\/(?<file>[^)\/\s]+)\)\s*$/i;
+	/^\s*(?<syntax>!|@video)\[(?<caption>[^\]]*)\]\(\/media\/(?<contentType>[^)/\s]+)\/(?<id>[^)/\s]+)\/(?<file>[^)/\s]+)\)\s*$/i;
 
 const main = async () => {
 	const [contentType, mdxFileName] = process.argv[2].split("/");
@@ -47,8 +47,8 @@ const main = async () => {
 
 	const lines = content.split(/\n/).map((line, index) => {
 		const match = markdownImageSourceRegex.exec(line);
-		const { caption, contentType, id, file } = match?.groups || {};
-		if (contentType && id && file) {
+		const { syntax, caption, contentType, id, file } = match?.groups || {};
+		if (syntax && contentType && id && file) {
 			const safeCaption = caption ?? "";
 			const imageUrl = `https://${site.r2SubDomain}/${contentType}/${id}/${file}`;
 			logLines.push(
@@ -56,7 +56,7 @@ const main = async () => {
 					kleur.green("✓ "),
 					kleur.gray(`Replaced image source in line ${index + 1}:\n`),
 					kleur.gray("|"),
-					` ![${safeCaption}](`,
+					` ${syntax}[${safeCaption}](`,
 					kleur.yellow(`/media/${contentType}/${id}/${file}`),
 					kleur.gray(" -> "),
 					kleur.green(imageUrl),
@@ -65,7 +65,7 @@ const main = async () => {
 			);
 			return line.replace(
 				markdownImageSourceRegex,
-				`![${safeCaption}](${imageUrl})`,
+				`${syntax}[${safeCaption}](${imageUrl})`,
 			);
 		}
 		return line;

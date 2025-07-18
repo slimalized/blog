@@ -14,7 +14,6 @@ const visitor: Visitor<Heading> = (node, index, parent) => {
 
 	const heading: Heading = {
 		data: {
-			hName: `h${node.depth}`,
 			hProperties: {
 				value: (node.children[0] as Text).value,
 				depth: node.depth.toString(),

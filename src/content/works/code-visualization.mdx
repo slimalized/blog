@@ -7,7 +7,7 @@ thumbnail: https://media.slimalized.dev/works/code-visualization/screenshot.avif
 
 大学の卒業研究で、「『情報Ｉ』を対象としたプログラミング的思考を習得するための制御構造と関数の可視化」という題目で、プログラミングの動作可視化による初学者学習支援システムを開発し、その有用性を評価しました[^1]。以下のURLから実際に開発したシステム（以下、「学習教材」）を体験することができます（※モバイル向けの対応は本研究では実装していません。**14インチ以上の十分な大きさのディスプレイでの閲覧を想定しています。**）：
 
-https://flow-2yt.pages.dev/ 
+https://flow-2yt.pages.dev/
 
 [^1]: WebフレームワークにAstro、UIフレームワークにReactを使用し、TypeScriptで開発。システムのプログラムは現在非公開。
 
@@ -18,34 +18,16 @@ https://flow-2yt.pages.dev/
 - 条件分岐（if）の分岐条件式を色分けして表示し、評価結果をコード上に絵文字で表現。また、条件式の評価を具体的な値を用いて説明
 - 関数の宣言や呼び出し時の引数の受け渡し、返り値の受取を画面のスライドやアニメーションで表現
 
-<video autoplay loop muted width={"100%"}>
-    <source 
-    src="https://media.slimalized.dev/works/code-visualization/var.mp4" 
-    type="video/mp4" 
-    />
-</video>
-<video autoplay loop muted width={"100%"}>
-    <source 
-    src="https://media.slimalized.dev/works/code-visualization/loop.mp4" 
-    type="video/mp4" 
-    />
-</video>
-<video autoplay loop muted width={"100%"}>
-    <source 
-    src="https://media.slimalized.dev/works/code-visualization/condition.mp4" 
-    type="video/mp4" 
-    />
-</video>
-<video autoplay loop muted width={"100%"}>
-    <source 
-    src="https://media.slimalized.dev/works/code-visualization/function.mp4" 
-    type="video/mp4" 
-    />
-</video>
+@video[変数](https://media.slimalized.dev/works/code-visualization/var.mp4)
+
+@video[反復処理（for, while）](https://media.slimalized.dev/works/code-visualization/loop.mp4)
+
+@video[条件分岐（if）](https://media.slimalized.dev/works/code-visualization/condition.mp4)
+
+@video[関数](https://media.slimalized.dev/works/code-visualization/function.mp4)
 
 プログラミングの学習に課題意識を持つ高校生・大学生を対象に、「比較教材[^2]を用いて学習をするグループ」、「開発した教材を用いて学習をするグループ」に分かれて実際にプログラミングの学習をしてもらい、学習後に実施した確認テストやアンケートの結果をもとに、提案した手法の有用性を評価しました。
 
 また、2025年3月1日開催の[スマートライフ学会2025年大会](https://s-smartlife.jp/?page_id=601)にて当研究内容について口頭で発表しました。同学会に研究論文を投稿し、現在査読待ちです。
 
 [^2]: 可視化部分の表現を比較用に変更した教材（[比較教材のURL](https://stay-18x.pages.dev/)）。各ステップごとの変数の値を静的な表形式で示し、制御構造や関数は可視化しない。
-

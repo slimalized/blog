@@ -47,15 +47,11 @@ code {
 }
 
 code:is(:not(pre > *)) {
-	padding-inline: 4px;
-	font-size: var(--font-size-s);
-	background-color: var(--color-primary-background-layer-l);
-	border: solid 1px var(--color-primary-outline-l);
+	padding-inline: 6px;
+	margin-inline: 2px;
+	font-size: var(--font-size-m);
+	word-break: break-all;
+	white-space: pre-wrap;
+	background-color: var(--color-background-code);
 	border-radius: var(--border-radius-s);
-}
-
-video {
-	margin-block-start: var(--space-l);
-	border: solid 1px var(--color-secondary-outline-la);
-	box-shadow: var(--box-shadow-s);
 }

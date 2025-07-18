@@ -17,7 +17,9 @@ const hasSvg = src.endsWith(".svg");
         isLocal ? (
             <img src={src} alt={alt} />
         ) : (
-            <OptimizedImage src={src} alt={alt} />
+            <a href={src} target="_blank" rel="noopener noreferrer">
+                <OptimizedImage src={src} alt={alt} />
+            </a>
         )
     }
     <figcaption>{alt}</figcaption>

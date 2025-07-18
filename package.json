@@ -39,7 +39,7 @@
 		"zx": "^8.5.5"
 	},
 	"devDependencies": {
-		"@biomejs/biome": "1.9.4",
+		"@biomejs/biome": "2.0.6",
 		"lefthook": "^1.11.13",
 		"prettier": "^3.6.2",
 		"prettier-plugin-astro": "^0.14.1",

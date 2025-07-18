@@ -55,7 +55,9 @@ div.text-container {
 		height: 100%;
 		font-size: var(--font-size-m);
 		color: var(--color-primary-text-h);
-		transition: transform 250ms, color 0ms;
+		transition:
+			transform 250ms,
+			color 0ms;
 	}
 
 	span:first-of-type {
@@ -94,7 +96,9 @@ div.icon-container {
 		font-size: var(--font-size-m);
 		color: var(--color-primary-text-h);
 		opacity: 0;
-		transition: filter 250ms, opacity 250ms;
+		transition:
+			filter 250ms,
+			opacity 250ms;
 	}
 
 	&[data-is-open="false"] svg:last-of-type,
