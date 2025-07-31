@@ -67,6 +67,7 @@ const description = is404 ? title : (_description ?? site.description);
 
         {isArticle && <meta property="article:author" content={site.author} />}
 
+        <link rel="sitemap" href="/sitemap-index.xml" />
         <link rel="icon" href={faviconIco} sizes="48x48" />
         <link
             rel="icon"

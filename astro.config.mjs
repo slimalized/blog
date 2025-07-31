@@ -2,6 +2,7 @@
 
 import mdx from "@astrojs/mdx";
 import react from "@astrojs/react";
+import sitemap from "@astrojs/sitemap";
 import { defineConfig } from "astro/config";
 import { fontOptimizer } from "./src/integrations/fontOptimizer";
 import { codeBlock } from "./src/utils/remark/codeBlock";
@@ -17,7 +18,7 @@ export default defineConfig({
 		process.env.NODE_ENV === "development"
 			? "http://localhost:4321"
 			: "https://slimalized.dev",
-	integrations: [mdx(), react(), fontOptimizer()],
+	integrations: [mdx(), react(), fontOptimizer(), sitemap()],
 	markdown: {
 		// "details" changes the structure of the tree, so call it first.
 		remarkPlugins: [

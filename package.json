@@ -21,6 +21,7 @@
 		"@astrojs/mdx": "^4.3.0",
 		"@astrojs/react": "^4.3.0",
 		"@astrojs/rss": "^4.0.12",
+		"@astrojs/sitemap": "^3.4.2",
 		"@aws-sdk/client-s3": "^3.828.0",
 		"@types/jsdom": "^21.1.7",
 		"@types/react": "^19.1.8",
