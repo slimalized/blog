@@ -18,6 +18,7 @@ export default defineConfig({
 		process.env.NODE_ENV === "development"
 			? "http://localhost:4321"
 			: "https://slimalized.dev",
+	trailingSlash: "never",
 	integrations: [mdx(), react(), fontOptimizer(), sitemap()],
 	markdown: {
 		// "details" changes the structure of the tree, so call it first.
