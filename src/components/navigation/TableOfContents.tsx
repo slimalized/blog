@@ -77,6 +77,7 @@ export const TableOfContents = ({
 	const headingElementsRef = useRef<HTMLElement[]>([]);
 	const scrollDirectionRef = useRef<"down" | "up" | undefined>(undefined);
 	const itemRefs = useRef<Record<string, HTMLAnchorElement | null>>({});
+	const navRef = useRef<HTMLElement>(null);
 	const [activeIds, setActiveIds] = useState<Set<string>>(new Set());
 
 	// Only retrieve DOM elements when headings change.
@@ -90,10 +91,24 @@ export const TableOfContents = ({
 	useEffect(() => {
 		const lastActiveId = Array.from(activeIds).pop();
 		if (!lastActiveId) return;
-		itemRefs.current[lastActiveId]?.scrollIntoView({
-			behavior: "smooth",
-			block: "nearest",
-		});
+		const itemEl = itemRefs.current[lastActiveId];
+		const navEl = navRef.current;
+		if (!itemEl || !navEl) return;
+
+		const itemRect = itemEl.getBoundingClientRect();
+		const navRect = navEl.getBoundingClientRect();
+
+		if (itemRect.top < navRect.top) {
+			navEl.scrollTo({
+				top: navEl.scrollTop + itemRect.top - navRect.top,
+				behavior: "smooth",
+			});
+		} else if (itemRect.bottom > navRect.bottom) {
+			navEl.scrollTo({
+				top: navEl.scrollTop + itemRect.bottom - navRect.bottom,
+				behavior: "smooth",
+			});
+		}
 	}, [activeIds]);
 
 	useEffect(() => {
@@ -154,7 +169,7 @@ export const TableOfContents = ({
 
 	return (
 		<div id={styles["table-of-contents-wrapper"]}>
-			<nav id={styles["table-of-contents"]}>
+			<nav id={styles["table-of-contents"]} ref={navRef}>
 				{CreateTableOfContentsList(headings, 2, activeIds, itemRefs)}
 			</nav>
 		</div>

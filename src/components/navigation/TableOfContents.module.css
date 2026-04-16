@@ -161,10 +161,3 @@ a:is(ol.ol-depth-3 > li > *) {
 	padding-inline-start: 1.75ic;
 }
 
-a:is(nav#table-of-contents > ol > li:first-of-type > *) {
-	scroll-margin-block-start: 100vh;
-}
-
-a:is(nav#table-of-contents > ol > li:last-of-type > *) {
-	scroll-margin-block-end: 100vh;
-}

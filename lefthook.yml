@@ -16,7 +16,7 @@ pre-commit:
         - rebase
     - name: StyleLint
       glob: "*.{css,astro}"
-      run: stylelint --ignore-path .gitignore {staged_files}
+      run: bunx stylelint --ignore-path .gitignore {staged_files}
       stage_fixed: true
       skip:
         - merge
