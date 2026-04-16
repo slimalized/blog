@@ -77,7 +77,7 @@ const description = is404 ? title : (_description ?? site.description);
         />
         <link rel="apple-touch-icon" href={appleTouchIconPng.src} />
         {!is404 && <link rel="canonical" href={Astro.url} />}
-        <script is:inline>
+        <script is:inline data-astro-rerun>
             (function () {
                 const theme = localStorage.getItem("site-theme");
                 if (theme === "dark" || theme === "light") {
@@ -85,7 +85,7 @@ const description = is404 ? title : (_description ?? site.description);
                 } else {
                     const preferTheme = window.matchMedia(
                         "(prefers-color-scheme: dark)",
-                    )
+                    ).matches
                         ? "dark"
                         : "light";
                     localStorage.setItem("site-theme", preferTheme);
