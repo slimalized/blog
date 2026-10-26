@@ -27,6 +27,10 @@ const { entry, contentType } = Astro.props as Props<CollectionKey>;
 const { title, publishedDate, hide, thumbnail } = entry.data;
 const category = "category" in entry.data ? entry.data.category : "";
 const isNovel = "isNovel" in entry.data ? entry.data.isNovel : "";
+const borderlessThumbnail =
+    "borderlessThumbnail" in entry.data
+        ? entry.data.borderlessThumbnail
+        : false;
 const { Content, headings } = await render(entry);
 
 // Change the slug of the last heading to "脚注"
@@ -82,7 +86,11 @@ const date = dateMap[contentType](publishedDate);
                             category={category}
                         />
                     ) : (
-                        <Thumbnail src={thumbnail} alt={title} />
+                        <Thumbnail
+                            src={thumbnail}
+                            alt={title}
+                            borderless={borderlessThumbnail}
+                        />
                     ))
             }
             <p id="published-date">

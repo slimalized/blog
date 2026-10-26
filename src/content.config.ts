@@ -9,6 +9,7 @@ const posts = defineCollection({
 		thumbnail: z.string().optional(),
 		hide: z.literal(true).optional(),
 		isNovel: z.literal(true).optional(),
+		borderlessThumbnail: z.literal(true).optional(),
 	}),
 });
 

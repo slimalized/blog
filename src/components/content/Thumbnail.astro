@@ -8,9 +8,10 @@ interface Props {
     alt?: string;
     src?: string;
     category?: (typeof worksCategories)[number];
+    borderless?: boolean;
 }
 
-const { alt = site.author, src, category } = Astro.props;
+const { alt = site.author, src, category, borderless } = Astro.props;
 
 const isLocal = src?.startsWith("/media/");
 const hasSvg = src?.endsWith(".svg");
@@ -18,7 +19,7 @@ const isWorks = category !== undefined;
 ---
 
 <figure
-    class={`${hasSvg && "has-svg"} ${isWorks && "is-works"} thumbnail ${category}`}
+    class={`${hasSvg && "has-svg"} ${isWorks && "is-works"} ${borderless && "borderless"} thumbnail ${category}`}
 >
     {
         !src ? (
@@ -98,7 +99,9 @@ const isWorks = category !== undefined;
         box-shadow: var(--box-shadow-m);
     }
 
-    :global(img:is(figure.thumbnail.is-works:not(.has-svg) *)) {
+    :global(
+        img:is(figure.thumbnail:is(.is-works, .borderless):not(.has-svg) *)
+    ) {
         max-height: 8rem;
         border: none;
         border-radius: 0;
